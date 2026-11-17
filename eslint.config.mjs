@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored registry components (kokonutui) are kept as published.
+    "src/components/kokonutui/**",
   ]),
 ]);
 
