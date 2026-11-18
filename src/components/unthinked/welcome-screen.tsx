@@ -7,6 +7,7 @@ import { useBooking } from "@/lib/booking-store";
 import { DESTINATIONS } from "@/lib/data/seed";
 import { cn } from "@/lib/utils";
 import { AIOrb } from "./ai-orb";
+import { PoweredBy } from "./powered-by";
 import { FadedQuestion } from "./primitives";
 import { photo } from "@/lib/photo";
 import { ShaderGradient } from "@/components/ui/shader-gradient";
@@ -159,6 +160,7 @@ export function WelcomeScreen() {
                     Continue as {state.prefs.name}
                   </button>
                   <p className="mt-2 text-center text-[11.5px] text-white/40">Demo sign-in. Nothing leaves this device.</p>
+                  <PoweredBy className="mt-6" />
                 </form>
               ) : (
                 <>
