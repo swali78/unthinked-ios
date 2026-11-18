@@ -62,6 +62,23 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Travel together */}
+      <section aria-labelledby="together" className="mt-2.5 px-4">
+        <h2 id="together" className="sr-only">Travel together</h2>
+        <Link
+          href="/together"
+          className="relative flex items-center gap-4 overflow-hidden rounded-[24px] p-4 transition-transform duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70"
+          style={{ background: "linear-gradient(135deg, rgb(79 163 184 / 0.30), rgb(201 120 90 / 0.24))" }}
+        >
+          <span aria-hidden className="text-[30px] leading-none drop-shadow-[0_6px_10px_rgb(0_0_0/0.55)]">🧳</span>
+          <span className="flex-1 text-[16px] leading-[1.15] text-white">
+            Travel <SerifAccent className="text-[18px] text-white/85">together</SerifAccent>
+            <span className="mt-1 block text-[12.5px] text-white/65">Find people flying where you are. Plan and split the cost.</span>
+          </span>
+          <span aria-hidden className="text-white/60">→</span>
+        </Link>
+      </section>
+
       {/* Upcoming trip */}
       <section aria-labelledby="upcoming" className="mt-8 px-4">
         <h2 id="upcoming" className="mb-3 px-1 text-[13px] text-white/60">
