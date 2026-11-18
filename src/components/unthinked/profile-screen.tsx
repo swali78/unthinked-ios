@@ -1,7 +1,5 @@
 "use client";
 
-import { PoweredBy } from "./powered-by";
-
 import { Bell, CreditCard, FileText, Plane, RotateCcw, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useState } from "react";
@@ -159,8 +157,7 @@ export function ProfileScreen() {
         </button>
       </List>
 
-      <PoweredBy className="mt-9" />
-      <p className="mt-5 text-center text-[12px] text-white/35">Unthinked demo · prices, bookings and visas are simulated</p>
+      <p className="mt-8 text-center text-[12px] text-white/35">Unthinked demo · prices, bookings and visas are simulated</p>
     </TabScreen>
   );
 }
