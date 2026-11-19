@@ -390,7 +390,7 @@ function VisaApplyForm() {
   const last = step === STEPS.length - 1;
 
   return (
-    <div className="relative flex h-full flex-col pt-[max(env(safe-area-inset-top),12px)] md:pt-[54px]">
+    <div className="relative flex h-full flex-col pt-[max(env(safe-area-inset-top),12px)] frame:pt-[54px]">
       <header className="px-4 pb-3">
         <div className="grid grid-cols-[44px_1fr_44px] items-center">
           <button
@@ -432,7 +432,7 @@ function VisaApplyForm() {
       </main>
 
       {(!last || appId) && (
-        <div className="relative z-10 border-t border-white/[0.06] bg-[#0b0b0c]/85 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 backdrop-blur-xl md:pb-7">
+        <div className="relative z-10 border-t border-white/[0.06] bg-[#0b0b0c]/85 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 backdrop-blur-xl frame:pb-7">
           {appId ? (
             <PrimaryButton className="w-full" onClick={() => router.push(`/visa/status?id=${appId}`)}>
               Track application

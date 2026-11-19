@@ -196,7 +196,7 @@ export function TripPlanner() {
   const last = step === "summary";
 
   return (
-    <div className="relative flex h-full flex-col pt-[max(env(safe-area-inset-top),12px)] md:pt-[54px]">
+    <div className="relative flex h-full flex-col pt-[max(env(safe-area-inset-top),12px)] frame:pt-[54px]">
       <header className="flex items-center justify-between px-4 pb-3">
         <button
           type="button"
@@ -264,7 +264,7 @@ export function TripPlanner() {
       </div>
 
       {/* Previous / Next, as in the reference */}
-      <div className="grid grid-cols-2 gap-2.5 px-4 pb-[max(env(safe-area-inset-bottom),14px)] pt-5 md:pb-8">
+      <div className="grid grid-cols-2 gap-2.5 px-4 pb-[max(env(safe-area-inset-bottom),14px)] pt-5 frame:pb-8">
         {last ? (
           <>
             <button type="button" onClick={askAI} className="glass h-[72px] rounded-[26px] text-[16px] text-white transition-transform active:scale-[0.97]">
