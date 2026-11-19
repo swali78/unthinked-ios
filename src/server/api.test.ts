@@ -152,6 +152,14 @@ describe("group trips", () => {
     expect(g.plan[0]).toMatchObject({ day: "Day 1", votes: 1 });
     g = (await call("POST", `/groups/${gid}/plan/${g.plan[0].id}/vote`, { token: me.token })).data.group;
     expect(g.plan[0].votes).toBe(1);
+    expect(g.plan[0].votedByMe).toBe(true);
+    // Voting is a toggle: taking the vote back, twice, leaves zero.
+    g = (await call("DELETE", `/groups/${gid}/plan/${g.plan[0].id}/vote`, { token: me.token })).data.group;
+    expect(g.plan[0]).toMatchObject({ votes: 0, votedByMe: false });
+    g = (await call("DELETE", `/groups/${gid}/plan/${g.plan[0].id}/vote`, { token: me.token })).data.group;
+    expect(g.plan[0].votes).toBe(0);
+    g = (await call("POST", `/groups/${gid}/plan/${g.plan[0].id}/vote`, { token: me.token })).data.group;
+    expect(g.plan[0]).toMatchObject({ votes: 1, votedByMe: true });
 
     g = (await call("POST", `/groups/${gid}/expenses`, { token: me.token, body: { title: "Scooters", amount: 40.5, paidBy: "me", splitWith: ["me", "t4"] } })).data.group;
     expect(g.expenses[0]).toMatchObject({ amount: 40.5, paidBy: "me" });
@@ -159,6 +167,23 @@ describe("group trips", () => {
 
     g = (await call("POST", `/groups/${gid}/settlements`, { token: me.token, body: { from: "t4", to: "me", amount: 20.25 } })).data.group;
     expect(g.settled[0]).toMatchObject({ from: "t4", to: "me", amount: 20.25 });
+  });
+
+  it("counts one vote per member when two people vote on the same idea", async () => {
+    const a = await signUp("Aisha");
+    const b = await signUp("Ben");
+    await call("POST", "/match/swipes", { token: a.token, body: { targetId: b.id, action: "like" } });
+    await call("POST", "/match/swipes", { token: b.token, body: { targetId: a.id, action: "like" } });
+    const created = await call("POST", "/groups", { token: a.token, body: { withUserId: b.id } });
+    expect(created.status).toBe(201);
+    const gid = created.data.group.id;
+    let g = (await call("POST", `/groups/${gid}/plan`, { token: a.token, body: { title: "Night market" } })).data.group;
+    const item = g.plan[0].id;
+    for (let i = 0; i < 3; i++) await call("POST", `/groups/${gid}/plan/${item}/vote`, { token: b.token });
+    g = (await call("GET", `/groups/${gid}`, { token: b.token })).data.group;
+    expect(g.plan[0]).toMatchObject({ votes: 2, votedByMe: true });
+    g = (await call("DELETE", `/groups/${gid}/plan/${item}/vote`, { token: a.token })).data.group;
+    expect(g.plan[0]).toMatchObject({ votes: 1, votedByMe: false });
   });
 
   it("can't start a trip without a match, or open someone else's group", async () => {
