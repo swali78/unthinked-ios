@@ -12,6 +12,7 @@ const password = z.string().min(8, "Use at least 8 characters.").max(200);
 
 const SignUp = z.object({ email, password, name: z.string().trim().min(1).max(40) });
 const SignIn = z.object({ email, password: z.string().min(1).max(200) });
+const DeleteAccount = z.object({ password: z.string().min(1).max(200) });
 
 const ProfilePatch = z
   .object({
@@ -90,5 +91,16 @@ export const accountRoutes = [
     if (name) await db.update(users).set({ name }).where(eq(users.id, user.id));
     if (Object.keys(rest).length) await db.update(profiles).set(rest).where(eq(profiles.userId, user.id));
     return json(await account(db, user.id));
+  }),
+
+  // Required by the App Store (guideline 5.1.1(v)) and Google Play. Every table
+  // references users with ON DELETE CASCADE, so this erases sessions, profile,
+  // swipes, matches, messages, group trips, bookings and visa applications.
+  route.authed("DELETE", "/me", async ({ db, user, body }) => {
+    const { password } = await body(DeleteAccount);
+    const [u] = await db.select({ passwordHash: users.passwordHash }).from(users).where(eq(users.id, user.id)).limit(1);
+    if (!u || !(await verifyPassword(password, u.passwordHash))) throw new HttpError(401, "invalid_credentials", "That password isn't right.");
+    await db.delete(users).where(eq(users.id, user.id));
+    return json({ ok: true }, { headers: { "set-cookie": clearedSessionCookie() } });
   }),
 ];

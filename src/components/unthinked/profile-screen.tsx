@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, ChevronRight, Cloud, CreditCard, FileText, Plane, RotateCcw, Users } from "lucide-react";
+import { Bell, ChevronRight, Cloud, CreditCard, FileText, LifeBuoy, Plane, RotateCcw, ScrollText, Shield, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useState } from "react";
@@ -174,6 +174,13 @@ export function ProfileScreen() {
         </button>
       </List>
 
+      <SectionLabel className="mt-7">About</SectionLabel>
+      <List>
+        <LinkRow href="/support" icon={LifeBuoy} title="Help & support" />
+        <LinkRow href="/privacy" icon={Shield} title="Privacy policy" />
+        <LinkRow href="/terms" icon={ScrollText} title="Terms of use" />
+      </List>
+
       <p className="mt-8 text-center text-[12px] text-white/35">Unthinked demo · prices, bookings and visas are simulated</p>
     </TabScreen>
   );
@@ -181,6 +188,16 @@ export function ProfileScreen() {
 
 function List({ children }: { children: ReactNode }) {
   return <div className="glass divide-y divide-white/[0.07] overflow-hidden rounded-[24px]">{children}</div>;
+}
+
+function LinkRow({ href, icon: Icon, title }: { href: string; icon: typeof Users; title: string }) {
+  return (
+    <Link href={href} className="flex items-center gap-3 px-4 py-3.5 transition-colors active:bg-white/[0.04]">
+      <Icon className="size-4 shrink-0 text-white/55" />
+      <span className="flex-1 text-[15px] text-white">{title}</span>
+      <ChevronRight className="size-4 text-white/35" />
+    </Link>
+  );
 }
 
 function Row({ icon: Icon, title, detail }: { icon: typeof Users; title: string; detail: ReactNode }) {
