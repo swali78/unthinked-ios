@@ -115,7 +115,8 @@ export function checkVisa({
     dubai: "UAE", london: "United Kingdom", uk: "United Kingdom", paris: "France", rome: "Italy",
     usa: "United States", "new york": "United States", doha: "Qatar", maldives: "Maldives",
   };
-  const name = Object.entries(alias).find(([k]) => q.includes(k))?.[1] ?? destination;
+  // Whole words only, so "Nusa Penida" isn't read as "USA" or "Fukuoka" as "UK".
+  const name = Object.entries(alias).find(([k]) => new RegExp(`(^|[^a-z])${k}($|[^a-z])`).test(q))?.[1] ?? destination;
   const rule = VISA_RULES.find((v) => v.destination.toLowerCase() === name.toLowerCase());
   return rule
     ? { rule, nationality }
@@ -138,7 +139,8 @@ export function suggestDestinations({ theme }: { theme?: string }): { destinatio
 
 /** Cheapest fare for each of `days` dates centred on `date`, for the price strip. */
 export function priceCalendar(args: { from: string; to: string; date: string; cabin?: Flight["cabin"] }, days = 15) {
-  const centre = new Date(args.date);
+  // Local midnight: a bare "YYYY-MM-DD" parses as UTC and shifts the strip a day west of Greenwich.
+  const centre = new Date(`${args.date}T00:00:00`);
   return Array.from({ length: days }, (_, i) => {
     const d = new Date(centre);
     d.setDate(centre.getDate() + i - Math.floor(days / 2));

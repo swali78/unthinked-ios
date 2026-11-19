@@ -70,7 +70,13 @@ export function TogetherChat() {
     end.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages.length]);
 
-  if (!person) return null;
+  if (!person) {
+    return (
+      <Screen title="Chat" back="/together/chats">
+        <p className="pt-10 text-center text-[15px] text-white/60">This conversation isn&apos;t available any more.</p>
+      </Screen>
+    );
+  }
 
   const send = () => {
     const t = text.trim();
