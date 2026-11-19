@@ -25,7 +25,13 @@ export function TogetherTrip() {
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ title: "", amount: "", paidBy: "me" });
 
-  if (!g) return null;
+  if (!g) {
+    return (
+      <Screen title="Group trip" back="/together/chats">
+        <p className="pt-10 text-center text-[15px] text-white/60">This trip isn&apos;t available any more.</p>
+      </Screen>
+    );
+  }
   const total = g.expenses.reduce((a, e) => a + e.amount, 0);
   const owed = balances(g);
 
