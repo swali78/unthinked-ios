@@ -117,3 +117,24 @@ export function Skeleton({ className }: { className?: string }) {
  * capped, so the 7th item onward appears with the 6th and nothing ever waits.
  */
 export const STAGGER = [0, 0.04, 0.07, 0.095, 0.115, 0.13] as const;
+
+/** iOS-style on/off switch. */
+export function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={cn("relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors", checked ? "bg-emerald-500" : "bg-white/20")}
+    >
+      <span
+        className={cn(
+          "absolute left-0 top-[2px] size-[27px] rounded-full bg-white shadow transition-transform duration-200",
+          checked ? "translate-x-[22px]" : "translate-x-[2px]",
+        )}
+      />
+    </button>
+  );
+}
