@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { photo } from "@/lib/photo";
-import { type Compatibility, compatibility, fitsPrefs, rangeLabel, TRAVELERS, type Traveler, type TravelStyle, together, useTogether } from "@/lib/together";
+import { type Compatibility, compatibility, fitsPrefs, rangeLabel, type Traveler, type TravelStyle, together, useTogether } from "@/lib/together";
 import { Chip, SerifAccent } from "./primitives";
 import { Screen } from "./screen";
 
@@ -89,7 +89,7 @@ export function TogetherDiscover() {
 
   // With preferences set, filter by them and put the best matches first.
   const deck = useMemo(() => {
-    const open = TRAVELERS.filter(
+    const open = s.people.filter(
       (t) => !s.liked.includes(t.id) && !s.passed.includes(t.id) && !s.blocked.includes(t.id) && (style === "All" || t.style === style),
     );
     const { prefs } = s;
