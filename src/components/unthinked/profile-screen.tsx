@@ -7,7 +7,7 @@ import { DEFAULT_PREFS, type Prefs, useBooking } from "@/lib/booking-store";
 import { SAVED_TRAVELER } from "@/lib/data/booking";
 import { AIRPORTS, TRAVELER } from "@/lib/data/seed";
 import { cn } from "@/lib/utils";
-import { Chip, SerifAccent, Skeleton } from "./primitives";
+import { Chip, SerifAccent, Skeleton, Switch } from "./primitives";
 import { SectionLabel } from "./screen";
 import { TabScreen } from "./tab-screen";
 
@@ -193,22 +193,3 @@ function ChipGroup<T extends string>({ label, options, value, onChange }: { labe
   );
 }
 
-function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={() => onChange(!checked)}
-      className={cn("relative h-[31px] w-[51px] rounded-full transition-colors", checked ? "bg-emerald-500" : "bg-white/20")}
-    >
-      <span
-        className={cn(
-          "absolute left-0 top-[2px] size-[27px] rounded-full bg-white shadow transition-transform duration-200",
-          checked ? "translate-x-[22px]" : "translate-x-[2px]",
-        )}
-      />
-    </button>
-  );
-}

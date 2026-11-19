@@ -1,12 +1,12 @@
 "use client";
 
-import { BadgeCheck, MessageCircle, Plane, ShieldCheck, Sparkles, X } from "lucide-react";
+import { BadgeCheck, ChevronRight, MessageCircle, Plane, ShieldCheck, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import { AnimatePresence, animate, motion, type PanInfo, useMotionValue, useTransform } from "motion/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { photo } from "@/lib/photo";
-import { TRAVELERS, type Traveler, type TravelStyle, together, useTogether } from "@/lib/together";
+import { type Compatibility, compatibility, fitsPrefs, rangeLabel, TRAVELERS, type Traveler, type TravelStyle, together, useTogether } from "@/lib/together";
 import { Chip, SerifAccent } from "./primitives";
 import { Screen } from "./screen";
 
@@ -25,6 +25,61 @@ export function Avatar({ t, size = 40 }: { t: Pick<Traveler, "name" | "tint"> | 
 
 export const ME_AVATAR = { name: "You", tint: ["#4FA3B8", "#C9785A"] as [string, string] };
 
+/** "It's a trip!" dialog, shown when both travelers connect. */
+export function MatchCelebration({ match, onMessage, onClose }: { match: Traveler | null; onMessage: (t: Traveler) => void; onClose: () => void }) {
+  const prefs = useTogether().prefs;
+  const fit = match && prefs ? compatibility(prefs, match) : null;
+  return (
+    <AnimatePresence>
+      {match && (
+        <motion.div
+          className="absolute inset-0 z-30 flex items-center justify-center bg-black/70 p-6 backdrop-blur-md"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0, transition: { duration: 0.15 } }}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`You matched with ${match.name}`}
+        >
+          <motion.div
+            className="glass w-full rounded-[30px] p-6 text-center"
+            initial={{ y: 24, scale: 0.96 }}
+            animate={{ y: 0, scale: 1, transition: { duration: 0.32, ease: EASE_OUT } }}
+          >
+            <div className="flex items-center justify-center gap-3">
+              <Avatar t={ME_AVATAR} size={72} />
+              <Plane className="size-6 text-[#E9C99F]" />
+              <Avatar t={match} size={72} />
+            </div>
+            <h2 className="mt-5 text-[30px] font-medium leading-none tracking-[-0.02em] text-white">
+              It&apos;s a <SerifAccent className="text-[34px] text-[#E9C99F]">trip!</SerifAccent>
+            </h2>
+            <p className="mt-3 text-[14px] text-white/65">
+              You and {match.name} are both heading to {match.trip.to}
+              {fit && fit.overlapDays > 0 ? `, with ${fit.overlapDays} days together` : ""}. Say hi and start planning.
+            </p>
+            {fit && (
+              <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[12.5px] text-white/85">
+                <Sparkles className="size-3.5 text-[#E9C99F]" /> {fit.score}% match
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() => onMessage(match)}
+              className="mt-5 w-full rounded-full bg-white py-3.5 text-[15px] font-medium text-black transition-transform active:scale-[0.97]"
+            >
+              Send a message
+            </button>
+            <button type="button" onClick={onClose} className="mt-3 text-[14px] text-white/60">
+              Keep swiping
+            </button>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 export function TogetherDiscover() {
   const s = useTogether();
   const router = useRouter();
@@ -32,11 +87,19 @@ export function TogetherDiscover() {
   const [match, setMatch] = useState<Traveler | null>(null);
   const [safety, setSafety] = useState<Traveler | null>(null);
 
-  const deck = useMemo(
-    () => TRAVELERS.filter((t) => !s.liked.includes(t.id) && !s.passed.includes(t.id) && !s.blocked.includes(t.id) && (style === "All" || t.style === style)),
-    [s.liked, s.passed, s.blocked, style],
-  );
-  const top = deck[0];
+  // With preferences set, filter by them and put the best matches first.
+  const deck = useMemo(() => {
+    const open = TRAVELERS.filter(
+      (t) => !s.liked.includes(t.id) && !s.passed.includes(t.id) && !s.blocked.includes(t.id) && (style === "All" || t.style === style),
+    );
+    const { prefs } = s;
+    if (!prefs) return open.map((t) => ({ t, fit: null }));
+    return open
+      .filter((t) => fitsPrefs(prefs, t))
+      .map((t) => ({ t, fit: compatibility(prefs, t) }))
+      .sort((a, b) => b.fit.score - a.fit.score);
+  }, [s, style]);
+  const top = deck[0]?.t;
 
   const decide = (t: Traveler, dir: 1 | -1) => {
     if (dir > 0) {
@@ -61,43 +124,11 @@ export function TogetherDiscover() {
       bodyClassName="flex flex-col pb-4"
       overlay={
         <>
-      {/* It's a trip */}
-      <AnimatePresence>
-        {match && (
-          <motion.div
-            className="absolute inset-0 z-30 flex items-center justify-center bg-black/70 p-6 backdrop-blur-md"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.15 } }}
-          >
-            <motion.div
-              className="glass w-full rounded-[30px] p-6 text-center"
-              initial={{ y: 24, scale: 0.96 }}
-              animate={{ y: 0, scale: 1, transition: { duration: 0.32, ease: EASE_OUT } }}
-            >
-              <div className="flex items-center justify-center gap-3">
-                <Avatar t={ME_AVATAR} size={72} />
-                <Plane className="size-6 text-[#E9C99F]" />
-                <Avatar t={match} size={72} />
-              </div>
-              <h2 className="mt-5 text-[30px] font-medium leading-none tracking-[-0.02em] text-white">
-                It&apos;s a <SerifAccent className="text-[34px] text-[#E9C99F]">trip!</SerifAccent>
-              </h2>
-              <p className="mt-3 text-[14px] text-white/65">You and {match.name} are both heading to {match.trip.to}. Say hi and start planning.</p>
-              <button
-                type="button"
-                onClick={() => { const id = match.id; setMatch(null); router.push(`/together/chat?id=${id}`); }}
-                className="mt-5 w-full rounded-full bg-white py-3.5 text-[15px] font-medium text-black transition-transform active:scale-[0.97]"
-              >
-                Send a message
-              </button>
-              <button type="button" onClick={() => setMatch(null)} className="mt-3 text-[14px] text-white/60">
-                Keep swiping
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <MatchCelebration
+        match={match}
+        onMessage={(t) => { setMatch(null); router.push(`/together/chat?id=${t.id}`); }}
+        onClose={() => setMatch(null)}
+      />
 
       {/* Safety sheet */}
       <AnimatePresence>
@@ -126,7 +157,27 @@ export function TogetherDiscover() {
         </>
       }
     >
-      <p className="px-1 text-[13px] text-white/55">People flying where you are, around your dates.</p>
+      {s.prefs ? (
+        <Link
+          href="/together/setup"
+          className="glass-thin flex items-center gap-2 self-start rounded-full py-2 pl-3.5 pr-3 text-[13px] text-white/85 transition-transform active:scale-[0.97]"
+        >
+          <Plane className="size-3.5 text-[#E9C99F]" />
+          {s.prefs.destination} · {rangeLabel(s.prefs.start, s.prefs.end)}
+          <SlidersHorizontal className="ml-1 size-3.5 text-white/55" aria-label="Edit match preferences" />
+        </Link>
+      ) : (
+        <Link href="/together/setup" className="glass flex items-center gap-3 rounded-[22px] p-3.5 transition-transform active:scale-[0.98]">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10">
+            <Sparkles className="size-5 text-[#E9C99F]" />
+          </span>
+          <span className="flex-1">
+            <span className="block text-[14.5px] text-white">Get matched on your trip</span>
+            <span className="block text-[12.5px] text-white/55">Add your dates and interests to see who fits best</span>
+          </span>
+          <ChevronRight className="size-4 text-white/40" />
+        </Link>
+      )}
       <div className="mt-3 flex gap-2">
         {(["All", "Solo", "Duo", "Group"] as const).map((v) => (
           <Chip key={v} selected={style === v} onClick={() => setStyle(v)}>
@@ -137,14 +188,22 @@ export function TogetherDiscover() {
 
       <div className="relative mt-4 min-h-[440px] flex-1">
         {top ? (
-          deck.slice(0, 2).reverse().map((t) => (
-            <SwipeCard key={t.id} t={t} isTop={t.id === top.id} onDecide={(d) => decide(t, d)} onSafety={() => setSafety(t)} />
+          deck.slice(0, 2).reverse().map(({ t, fit }) => (
+            <SwipeCard
+              key={t.id}
+              t={t}
+              fit={fit}
+              isTop={t.id === top.id}
+              onDecide={(d) => decide(t, d)}
+              onSafety={() => setSafety(t)}
+              onOpen={() => router.push(`/together/profile?id=${t.id}`)}
+            />
           ))
         ) : (
           <div className="flex h-full flex-col items-center justify-center px-6 text-center">
             <Plane className="size-9 text-white/40" />
             <p className="mt-4 text-[17px] text-white">You&apos;ve seen everyone for now</p>
-            <p className="mt-1 text-[13.5px] text-white/55">Try another travel style, or ask the assistant to find a group.</p>
+            <p className="mt-1 text-[13.5px] text-white/55">Try another travel style, widen your dates, or ask the assistant to find a group.</p>
             <Link href="/chat" className="mt-5 rounded-full bg-white px-5 py-3 text-[14px] font-medium text-black transition-transform active:scale-[0.97]">
               Ask Unthinked
             </Link>
@@ -170,7 +229,21 @@ export function TogetherDiscover() {
   );
 }
 
-function SwipeCard({ t, isTop, onDecide, onSafety }: { t: Traveler; isTop: boolean; onDecide: (d: 1 | -1) => void; onSafety: () => void }) {
+function SwipeCard({
+  t,
+  fit,
+  isTop,
+  onDecide,
+  onSafety,
+  onOpen,
+}: {
+  t: Traveler;
+  fit: Compatibility | null;
+  isTop: boolean;
+  onDecide: (d: 1 | -1) => void;
+  onSafety: () => void;
+  onOpen: () => void;
+}) {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-300, 0, 300], [-10, 0, 10]);
   const connect = useTransform(x, [20, 110], [0, 1]);
@@ -195,6 +268,8 @@ function SwipeCard({ t, isTop, onDecide, onSafety }: { t: Traveler; isTop: boole
       drag={isTop ? "x" : false}
       dragElastic={0.9}
       onDragEnd={onDragEnd}
+      // A tap (not a drag) opens the full profile.
+      onTap={isTop ? onOpen : undefined}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img {...photo(t.image, 360, 460)} alt="" draggable={false} className="absolute inset-0 size-full object-cover" />
@@ -205,7 +280,7 @@ function SwipeCard({ t, isTop, onDecide, onSafety }: { t: Traveler; isTop: boole
           <Plane className="size-3.5 text-[#E9C99F]" /> Same flight · {t.trip.flight}
         </span>
       )}
-      <button type="button" aria-label={`Safety options for ${t.name}`} onClick={onSafety} className="glass-thin absolute right-4 top-4 flex size-9 items-center justify-center rounded-full text-white/85">
+      <button type="button" aria-label={`Safety options for ${t.name}`} onClick={onSafety} onPointerDown={(e) => e.stopPropagation()} className="glass-thin absolute right-4 top-4 flex size-9 items-center justify-center rounded-full text-white/85">
         <ShieldCheck className="size-[18px]" />
       </button>
 
@@ -221,6 +296,13 @@ function SwipeCard({ t, isTop, onDecide, onSafety }: { t: Traveler; isTop: boole
       )}
 
       <div className="absolute inset-x-0 bottom-0 p-5">
+        {fit && (
+          <p className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[12px] font-medium text-black">
+            <Sparkles className="size-3.5 text-[#C9785A]" />
+            {fit.score}% match
+            {fit.overlapDays > 0 && <span className="text-black/55">· {fit.overlapDays} days together</span>}
+          </p>
+        )}
         <div className="flex items-center gap-3">
           <Avatar t={t} size={42} />
           <h2 className="text-[26px] font-medium leading-none tracking-[-0.02em] text-white">
