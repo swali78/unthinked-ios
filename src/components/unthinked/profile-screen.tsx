@@ -1,12 +1,13 @@
 "use client";
 
-import { Bell, ChevronRight, CreditCard, FileText, LifeBuoy, Plane, RotateCcw, ScrollText, Shield, Users } from "lucide-react";
+import { Bell, ChevronRight, Cloud, CreditCard, FileText, LifeBuoy, Plane, RotateCcw, ScrollText, Shield, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useState } from "react";
 import { DEFAULT_PREFS, type Prefs, useBooking } from "@/lib/booking-store";
 import { SAVED_TRAVELER } from "@/lib/data/booking";
 import { AIRPORTS, TRAVELER } from "@/lib/data/seed";
+import { useSession } from "@/lib/session";
 import { cn } from "@/lib/utils";
 import { Chip, SerifAccent, Skeleton, Switch } from "./primitives";
 import { SectionLabel } from "./screen";
@@ -20,6 +21,7 @@ export function ProfileScreen() {
   const router = useRouter();
   const { state, ready, update, reset } = useBooking();
   const [confirmReset, setConfirmReset] = useState(false);
+  const account = useSession();
   const prefs = state.prefs;
   const setPref = (patch: Partial<Prefs>) => update({ prefs: { ...prefs, ...patch } });
 
@@ -71,6 +73,20 @@ export function ProfileScreen() {
           </p>
         </div>
       </section>
+
+      {/* Account */}
+      <Link href="/account" className="glass mt-3 flex items-center gap-3 rounded-[22px] px-4 py-3.5 transition-transform active:scale-[0.98]">
+        <Cloud className="size-4 shrink-0 text-[#E9C99F]" />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[15px] text-white">
+            {account.status === "signed-in" ? "Synced to your account" : "Create an account"}
+          </span>
+          <span className="block truncate text-[12px] text-white/50">
+            {account.status === "signed-in" ? account.user?.email : "Keep trips, matches and chats on every device"}
+          </span>
+        </span>
+        <ChevronRight className="size-4 text-white/35" />
+      </Link>
 
       <SectionLabel className="mt-7">Travelers</SectionLabel>
       <List>

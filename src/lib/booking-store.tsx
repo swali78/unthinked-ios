@@ -1,6 +1,8 @@
 "use client";
 
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { api } from "@/lib/api";
+import { onSessionChange } from "@/lib/session";
 import type { FareId, Passenger } from "@/lib/data/booking";
 import type { Flight } from "@/lib/data/types";
 import type { VisaApplication } from "@/lib/data/visa";
@@ -154,6 +156,8 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   const reset = useCallback(() => setState(INITIAL), []);
   const value = useMemo(() => ({ state, ready, update, reset }), [state, ready, update, reset]);
 
+  useAccountSync(state, ready, setState);
+
   return <BookingContext.Provider value={value}>{children}</BookingContext.Provider>;
 }
 
@@ -161,4 +165,77 @@ export function useBooking() {
   const ctx = useContext(BookingContext);
   if (!ctx) throw new Error("useBooking must be used inside <BookingProvider>");
   return ctx;
+}
+
+/**
+ * Signed in, bookings, visa applications and preferences are saved to your
+ * account. On sign-in, anything booked on this device first is uploaded, and
+ * what's in the account comes down. localStorage stays as the offline copy.
+ */
+function useAccountSync(state: BookingState, ready: boolean, setState: (fn: (s: BookingState) => BookingState) => void) {
+  const [signedIn, setSignedIn] = useState(false);
+  const synced = useRef(new Set<string>());
+  const lastPrefs = useRef<string | null>(null);
+
+  // Pull from the account when someone signs in.
+  useEffect(() => {
+    if (!ready) return;
+    return onSessionChange((user) => {
+      synced.current = new Set();
+      lastPrefs.current = null;
+      setSignedIn(false);
+      if (!user) return;
+      Promise.all([
+        api<{ prefs: Prefs }>("/me"),
+        api<{ bookings: Trip[] }>("/bookings"),
+        api<{ applications: VisaApplication[] }>("/visa-applications"),
+      ])
+        .then(([me, b, v]) => {
+          b.bookings.forEach((t) => synced.current.add(t.id));
+          v.applications.forEach((a) => synced.current.add(a.id));
+          lastPrefs.current = JSON.stringify(me.prefs);
+          setState((s) => ({
+            ...s,
+            prefs: { ...s.prefs, ...me.prefs },
+            trips: [...b.bookings, ...s.trips.filter((t) => !synced.current.has(t.id))],
+            visaApps: [...v.applications, ...s.visaApps.filter((a) => !synced.current.has(a.id))].sort((x, y) => y.submittedAt - x.submittedAt),
+          }));
+          setSignedIn(true);
+        })
+        .catch((err) => console.warn("[account] couldn't load your account", err));
+    });
+  }, [ready, setState]);
+
+  // Push new bookings and visa applications.
+  useEffect(() => {
+    if (!signedIn) return;
+    for (const t of state.trips) {
+      if (synced.current.has(t.id)) continue;
+      synced.current.add(t.id);
+      api("/bookings", { method: "POST", body: t }).catch((err) => {
+        synced.current.delete(t.id);
+        console.warn("[account] booking not saved", t.id, err);
+      });
+    }
+    for (const a of state.visaApps) {
+      if (synced.current.has(a.id)) continue;
+      synced.current.add(a.id);
+      api("/visa-applications", { method: "POST", body: a }).catch((err) => {
+        synced.current.delete(a.id);
+        console.warn("[account] visa application not saved", a.id, err);
+      });
+    }
+  }, [signedIn, state.trips, state.visaApps]);
+
+  // Save preference changes, a moment after the last edit.
+  useEffect(() => {
+    if (!signedIn) return;
+    const next = JSON.stringify(state.prefs);
+    if (next === lastPrefs.current || !state.prefs.name.trim()) return;
+    const timer = setTimeout(() => {
+      lastPrefs.current = next;
+      api("/me", { method: "PATCH", body: { ...state.prefs, name: state.prefs.name.trim() } }).catch((err) => console.warn("[account] preferences not saved", err));
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [signedIn, state.prefs]);
 }

@@ -25,8 +25,17 @@ export default function Page() {
 
       <h2>Travel companions</h2>
       <p>
-        Be respectful to people you meet through Travel together. Don&apos;t post anything illegal, hateful or
-        misleading, and use your own judgement before meeting or travelling with anyone.
+        You must be 18 or older to use Travel together. Be respectful to the people you meet. Don&apos;t post
+        anything illegal, hateful, sexual, threatening or misleading, don&apos;t harass anyone, and don&apos;t
+        pretend to be someone else. We have zero tolerance for abusive content or users: we may remove content and
+        suspend or delete accounts that break these rules. Block anyone who bothers you and report them to us. Use your
+        own judgement before meeting or travelling with anyone.
+      </p>
+
+      <h2>Your account</h2>
+      <p>
+        Keep your password private; you&apos;re responsible for what happens on your account. You can delete your
+        account at any time from the app.
       </p>
 
       <h2>The service</h2>

@@ -14,8 +14,9 @@ The native wrapping is ready, but **as the app stands today, Apple is likely to 
 
 1. **Simulated bookings.** App Review rejects apps that look like demos or have features that don't really work (Apple guideline 2.1 "App Completeness" and 2.3 "Accurate Metadata"). A travel app where "Book" and "Pay" are fake is the textbook case. Roadmap steps 2 to 4 (backend, real flight, hotel and visa partners, payments) fix this. The alternative is to launch v1 as a **trip planner and visa checker** that hides the Book and Pay buttons, with no fake checkouts.
 2. **"It's just a website."** Apple guideline 4.2 rejects apps that are only a website in a frame. The app looks and feels native, which helps. Real native features help more: push notifications for trip updates, Face ID for the wallet, offline tickets. Plan at least one for v1.
-3. **Travel together with real people** (once the backend connects real users) needs report and block, content filtering, and an age rating of 17+ on iOS (guideline 1.2), plus in-app **account deletion** (5.1.1(v)) once accounts exist.
+3. **Travel together connects real people** now that the backend is in. Apple guideline 1.2 needs: a way to report and block (✅ in the app), a way for reports to **reach you and be acted on within 24 hours** (☐ reports only block for now), a filter for objectionable content (☐), and published contact info (✅ support page). Expect a 17+ age rating.
 4. **Sign-in:** if you add Google or Facebook login, iOS also needs **Sign in with Apple**.
+5. **Demo account for reviewers.** Sign-in exists, so both stores need working demo credentials in the review notes.
 
 ## Checklist
 
@@ -31,7 +32,8 @@ The native wrapping is ready, but **as the app stands today, Apple is likely to 
 - ✅ Capacitor iOS and Android projects (`ios/`, `android/`), bundle ID `app.unthinked.travel`
 - ✅ App icon, Android adaptive icon and splash screens from the orb logo
 - ✅ Offline fallback screen, Android back button, status bar, portrait lock
-- ✅ Privacy policy `/privacy`, terms `/terms`, support `/support`, linked from Profile
+- ✅ Privacy policy `/privacy`, terms `/terms`, support `/support`, linked from Profile (covers accounts and Travel together)
+- ✅ In-app account deletion (Account → Delete account, `DELETE /api/v1/me`)
 - ✅ Store copy, privacy-label answers and review notes drafted
 - ✅ Draft screenshots (`store/screenshots/`) and Play graphics (`store/`)
 - ☐ Confirm the bundle ID (it can't change after the first upload)
@@ -39,6 +41,8 @@ The native wrapping is ready, but **as the app stands today, Apple is likely to 
 - ☐ Set `NEXT_PUBLIC_LEGAL_NAME` and `NEXT_PUBLIC_SUPPORT_EMAIL` on the deployment
 - ☐ Fix the review blockers above (real bookings, or planner-only v1)
 - ☐ At least one native feature (push notifications recommended)
+- ☐ Reports from "Report and block" saved for review, plus an objectionable-content filter on chat and bios
+- ☐ Demo reviewer account on production
 - ☐ Final screenshots with real content and captions
 
 ### Go live (together, Swali approves each submission)

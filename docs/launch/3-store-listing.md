@@ -52,14 +52,19 @@ Unthinked is in early access: prices, bookings and visa applications are simulat
 **App Review notes** (App Store Connect → App Review Information)
 
 ```
-Unthinked is in early access. Flights, hotels and visa applications use sample data and nothing is charged. No login is required; all features are available from the home screen. The AI assistant is reached from the Chat tab. Travel together matches the user with sample traveller profiles; there is no real user-to-user messaging yet.
+Unthinked is in early access. Flights, hotels and visa applications use sample data and nothing is charged. The app works without an account; the AI assistant is on the Chat tab. To review accounts and Travel together, sign in with the demo account below (Profile → Create an account → Sign in). Travel together matches users with other travellers and seeded sample profiles; users can report and block from any profile or chat. Account deletion: Profile → account → Delete account.
+Demo account: <create one on production and paste the email and password here>
 ```
 
-**Age rating questionnaire:** answer "None" for everything. No real user-generated content or contact between users yet, so expect **4+**. Revisit when Travel together connects real people.
+**Age rating questionnaire:** Travel together lets adults chat with strangers, so answer **"Unrestricted web access: No"**, **"User-generated content: Yes"** and **"Messaging/chat: Yes"**. Expect **17+** (Apple's rule for apps that connect strangers). Set Travel together to 18+ in the app, which it already is.
 
-**App Privacy ("nutrition label")**, matching `/privacy`:
-- Data collected: **User Content → Other User Content** (chat messages sent to the assistant), *not linked to identity*, *not used for tracking*, purpose **App Functionality**.
-- Everything else: not collected.
+**App Privacy ("nutrition label")**, matching `/privacy`. Everything below is *linked to the user's identity*, *not used for tracking*, purpose **App Functionality**, and only collected when the user creates an account:
+- **Contact Info:** Name, Email Address
+- **User Content:** Other User Content (Travel together profile, plans, expenses), Emails or Text Messages (chats with other travellers)
+- **Identifiers:** User ID
+- **Sensitive Info:** none. Passport numbers count as *Other Data Types → Other Data*; declare that too.
+- **Other User Content** also covers assistant chat messages, which are sent but not stored.
+- Not collected: location, contacts, health, financial info, browsing history, usage data, diagnostics.
 
 ## Google Play
 
@@ -74,11 +79,13 @@ Unthinked is in early access. Flights, hotels and visa applications use sample d
 - Phone screenshots: `store/screenshots/ios-6.9/*.png` (also valid on Play)
 
 **Data safety form**, matching `/privacy`:
-- Does the app collect or share user data? **Yes, collects**: *Messages → Other in-app messages* (assistant chats), processed ephemerally, not shared for advertising, required for the feature.
+- Does the app collect or share user data? **Collects, does not share.**
+- Personal info: **Name, Email address, User IDs**; **Other info** (passport details). Optional (only with an account), for **App functionality** and **Account management**.
+- Messages: **Other in-app messages** (chats with travellers, assistant chats). For **App functionality**.
 - Is data encrypted in transit? **Yes.**
-- Can users request deletion? **Yes**: data is stored on the device and can be erased in Profile.
+- Can users request deletion? **Yes**, in the app (Profile → account → Delete account). Also give the web link `https://<your-domain>/support` as the deletion request URL.
 
-**Content rating (IARC):** Reference app, category "Travel". No violence, sexuality, gambling or user interaction yet.
+**Content rating (IARC):** category "Travel". No violence, sexuality or gambling. **Users can interact: Yes** (chat between users). **Shares personal info: Yes** (profiles visible to matches).
 
 **Target audience:** 18 and over.
 
