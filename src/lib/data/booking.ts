@@ -89,19 +89,22 @@ export const SAVED_TRAVELER: Passenger = {
   passportExpiry: "2031-08-02",
 };
 
+/** Local midnight for a "YYYY-MM-DD" date, so comparisons don't shift by the UTC offset. */
+const localDay = (iso: string) => new Date(`${iso}T00:00:00`);
+
 export function validatePassenger(p: Passenger, travelDate: string) {
   const errors: Partial<Record<keyof Passenger, string>> = {};
   if (!p.firstName.trim()) errors.firstName = "Enter the first name.";
   if (!p.lastName.trim()) errors.lastName = "Enter the last name.";
   if (!p.dob) errors.dob = "Enter a date of birth.";
-  else if (new Date(p.dob) > new Date()) errors.dob = "Can't be in the future.";
+  else if (localDay(p.dob) > new Date()) errors.dob = "Can't be in the future.";
   if (!p.nationality.trim()) errors.nationality = "Enter a nationality.";
   if (!/^[A-Z0-9]{6,9}$/i.test(p.passport.trim())) errors.passport = "Use 6–9 letters or digits.";
   if (!p.passportExpiry) errors.passportExpiry = "Enter the expiry date.";
   else {
-    const minExpiry = new Date(`${travelDate}T00:00:00`);
+    const minExpiry = localDay(travelDate);
     minExpiry.setMonth(minExpiry.getMonth() + 6);
-    if (new Date(p.passportExpiry) < minExpiry)
+    if (localDay(p.passportExpiry) < minExpiry)
       errors.passportExpiry = "Must be valid 6 months after travel.";
   }
   return errors;
