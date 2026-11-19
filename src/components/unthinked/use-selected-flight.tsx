@@ -19,7 +19,7 @@ export function useSelectedFlight() {
 
 export function FlowLoading() {
   return (
-    <div className="space-y-3 px-4 pt-[70px] md:pt-[110px]" aria-busy>
+    <div className="space-y-3 px-4 pt-[70px] frame:pt-[110px]" aria-busy>
       <Skeleton className="h-[180px] w-full rounded-[24px]" />
       <Skeleton className="h-[120px] w-full rounded-[24px]" />
       <Skeleton className="h-[120px] w-full rounded-[24px]" />

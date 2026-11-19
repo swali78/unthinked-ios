@@ -1,10 +1,10 @@
 "use client";
 
 import { ChevronLeft, Minus, Plus } from "lucide-react";
-import { animate, AnimatePresence, motion, type PanInfo, useMotionValue } from "motion/react";
+import { animate, AnimatePresence, motion, type PanInfo, useMotionValue, useTransform } from "motion/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type ComponentProps, type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { type ComponentProps, type ReactNode, useEffect, useId, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 /* ---------------- Screen shell ---------------- */
@@ -40,10 +40,10 @@ export function Screen({
   };
   const swipe = useEdgeSwipe(goBack);
   return (
-    <div
+    <motion.div
       {...swipe.handlers}
       style={swipe.style}
-      className="relative flex h-full flex-col pt-[max(env(safe-area-inset-top),12px)] md:pt-[54px]"
+      className="relative flex h-full flex-col pt-[max(env(safe-area-inset-top),12px)] frame:pt-[54px]"
     >
       <header className="relative z-10 grid grid-cols-[44px_1fr_44px] items-center gap-2 px-4 pb-2">
         {back === "back" ? (
@@ -71,24 +71,29 @@ export function Screen({
         {children}
       </main>
       {footer && (
-        <div className="relative z-10 border-t border-white/[0.06] bg-[#0b0b0c]/85 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 backdrop-blur-xl md:pb-7">
+        <div className="relative z-10 border-t border-white/[0.06] bg-[#0b0b0c]/85 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 backdrop-blur-xl frame:pb-7">
           {footer}
         </div>
       )}
       {overlay}
-    </div>
+    </motion.div>
   );
 }
 
 /**
  * iOS-style back gesture: a touch that starts within 24px of the left edge
  * drags the screen along and goes back past 90px. Mouse input is ignored.
+ *
+ * The drag lives in a motion value, not React state, so following the finger
+ * never re-renders the screen: it stays at 60/120fps on long, busy screens.
  */
 function useEdgeSwipe(onBack: () => void) {
-  const [dx, setDx] = useState(0);
+  const x = useMotionValue(0);
+  const boxShadow = useTransform(x, (v) => (v > 0 ? "-12px 0 30px rgb(0 0 0 / 0.5)" : "none"));
   const start = useRef<{ x: number; y: number } | null>(null);
   // Last two samples, for release velocity (px/ms).
   const sample = useRef({ x: 0, t: 0, v: 0 });
+  const settle = () => animate(x, 0, { duration: 0.25, ease: [0.32, 0.72, 0, 1] });
   const handlers = {
     onTouchStart: (e: React.TouchEvent) => {
       const t = e.touches[0];
@@ -99,28 +104,26 @@ function useEdgeSwipe(onBack: () => void) {
     onTouchMove: (e: React.TouchEvent) => {
       if (!start.current) return;
       const t = e.touches[0];
-      const x = t.clientX - start.current.x;
+      const dx = t.clientX - start.current.x;
       // Vertical scrolls cancel the gesture.
-      if (Math.abs(t.clientY - start.current.y) > 40 && x < 30) {
+      if (Math.abs(t.clientY - start.current.y) > 40 && dx < 30) {
         start.current = null;
-        setDx(0);
+        settle();
         return;
       }
       const dt = Math.max(1, e.timeStamp - sample.current.t);
       sample.current = { x: t.clientX, t: e.timeStamp, v: (t.clientX - sample.current.x) / dt };
-      setDx(Math.max(0, x));
+      x.set(Math.max(0, dx));
     },
     onTouchEnd: () => {
+      const dx = x.get();
       // Far enough, or a quick flick: a flick shouldn't need to travel 90px.
       if (start.current && (dx > 90 || (dx > 24 && sample.current.v > 0.5))) onBack();
       start.current = null;
-      setDx(0);
+      settle();
     },
   };
-  const style = dx
-    ? { transform: `translateX(${dx}px)`, boxShadow: "-12px 0 30px rgb(0 0 0 / 0.5)" }
-    : { transition: "transform 0.25s var(--ease-drawer)" };
-  return { handlers, style };
+  return { handlers, style: { x, boxShadow } };
 }
 
 /* ---------------- Buttons ---------------- */
@@ -243,7 +246,7 @@ function Sheet({
           {title}
         </h2>
         <div className="flex-1 overflow-y-auto px-5 pb-4 [scrollbar-width:none]">{children}</div>
-        {footer && <div className="px-5 pb-[max(env(safe-area-inset-bottom),16px)] pt-2 md:pb-8">{footer}</div>}
+        {footer && <div className="px-5 pb-[max(env(safe-area-inset-bottom),16px)] pt-2 frame:pb-8">{footer}</div>}
       </motion.div>
     </div>
   );
