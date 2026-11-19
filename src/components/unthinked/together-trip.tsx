@@ -17,8 +17,8 @@ const avatarOf = (id: string) => (id === "me" ? ME_AVATAR : travelerById(id) ?? 
 /** A group trip: plan together, then split costs and pay later. */
 export function TogetherTrip() {
   const params = useSearchParams();
-  const id = params.get("id") ?? "g1";
   const s = useTogether();
+  const id = params.get("id") ?? s.groups[0]?.id;
   const g = s.groups.find((x) => x.id === id);
   const [tab, setTab] = useState<"plan" | "split">(params.get("tab") === "split" ? "split" : "plan");
   const [idea, setIdea] = useState("");

@@ -112,7 +112,7 @@ export function TogetherChat() {
     >
       <button
         type="button"
-        onClick={() => router.push(`/together/trip?id=${together.startTrip(id)}`)}
+        onClick={async () => router.push(`/together/trip?id=${await together.startTrip(id)}`)}
         className="glass flex w-full items-center gap-3 rounded-[20px] p-3.5 text-left transition-transform active:scale-[0.98]"
       >
         <Users className="size-5 text-[#E9C99F]" />
