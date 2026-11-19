@@ -2,6 +2,7 @@
 
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/api";
+import { findOffensive } from "@/lib/moderation";
 import { onSessionChange } from "@/lib/session";
 import type { FareId, Passenger } from "@/lib/data/booking";
 import type { Flight } from "@/lib/data/types";
@@ -231,7 +232,8 @@ function useAccountSync(state: BookingState, ready: boolean, setState: (fn: (s: 
   useEffect(() => {
     if (!signedIn) return;
     const next = JSON.stringify(state.prefs);
-    if (next === lastPrefs.current || !state.prefs.name.trim()) return;
+    // An offensive name is shown as an error in Profile and never saved.
+    if (next === lastPrefs.current || !state.prefs.name.trim() || findOffensive(state.prefs.name)) return;
     const timer = setTimeout(() => {
       lastPrefs.current = next;
       api("/me", { method: "PATCH", body: { ...state.prefs, name: state.prefs.name.trim() } }).catch((err) => console.warn("[account] preferences not saved", err));
