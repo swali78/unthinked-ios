@@ -19,6 +19,8 @@ export const users = pgTable("users", {
   isDemo: boolean("is_demo").notNull().default(false),
   /** Demo travelers who like you back as soon as you like them. */
   demoLikesBack: boolean("demo_likes_back").notNull().default(false),
+  /** Set by a moderator. A suspended user can't sign in and is hidden from everyone. */
+  suspendedAt: timestamp("suspended_at", { withTimezone: true }),
   createdAt: createdAt(),
 });
 
@@ -221,4 +223,32 @@ export const visaApplications = pgTable(
     details: jsonb("details").notNull(),
   },
   (t) => [index("visa_user_idx").on(t.userId)],
+);
+
+/* Moderation ---------------------------------------------------------------- */
+
+export type ReportReason = "harassment" | "hate" | "sexual" | "spam" | "fake" | "safety" | "underage" | "other";
+
+/**
+ * "Report and block" from a profile, chat or group trip. Reviewed by the
+ * people listed in UNTHINKED_ADMIN_EMAILS at /admin/reports.
+ */
+export const reports = pgTable(
+  "reports",
+  {
+    id: text("id").primaryKey(),
+    reporterId: text("reporter_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    targetId: text("target_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    reason: text("reason").$type<ReportReason>().notNull(),
+    details: text("details").notNull().default(""),
+    /** Where it was reported from: "profile", "chat" or "discover". */
+    context: text("context").notNull().default("profile"),
+    /** Copy of the reported person's profile and their latest messages to the reporter, kept as evidence. */
+    evidence: jsonb("evidence").notNull(),
+    status: text("status").$type<"open" | "dismissed" | "suspended">().notNull().default("open"),
+    reviewedBy: text("reviewed_by"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("reports_status_idx").on(t.status, t.createdAt), index("reports_target_idx").on(t.targetId)],
 );
