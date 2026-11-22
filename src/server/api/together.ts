@@ -6,7 +6,7 @@
  * Group trip amounts are in dollars (two decimals), as the app shows them;
  * they're stored as integer cents.
  */
-import { and, asc, eq, inArray, ne, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { compatibility, fitsPrefs, type MatchPrefs, rangeLabel, type Traveler } from "@/lib/matching";
 import type { Db } from "../db";
@@ -15,6 +15,7 @@ import {
 } from "../db/schema";
 import { type AuthedCtx, forbidden, HttpError, json, notFound, route } from "../http";
 import { newId } from "../ids";
+import { assertClean } from "../moderation";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use yyyy-mm-dd.");
 export const MatchPrefsSchema = z
@@ -74,7 +75,7 @@ async function travelers(db: Db, me: string, opts: { ids?: string[]; limit?: num
     .leftJoin(travelPlans, eq(travelPlans.userId, users.id));
   const rows = opts.ids
     ? await base.where(inArray(users.id, opts.ids))
-    : await base.where(and(ne(users.id, me), sql`${travelPlans.userId} is not null`)).orderBy(sql`${travelPlans.updatedAt} desc`).limit(opts.limit ?? 200);
+    : await base.where(and(ne(users.id, me), isNull(users.suspendedAt), sql`${travelPlans.userId} is not null`)).orderBy(sql`${travelPlans.updatedAt} desc`).limit(opts.limit ?? 200);
   const likedMe = new Set(
     (await db.select({ id: swipes.userId }).from(swipes).where(and(eq(swipes.targetId, me), eq(swipes.action, "like")))).map((r) => r.id),
   );
@@ -199,8 +200,8 @@ const money = z.number().positive().max(1_000_000);
 async function swipe({ db, user, body }: AuthedCtx) {
   const { targetId, action } = await body(z.object({ targetId: userId, action: z.enum(["like", "pass", "block"]) }));
   if (targetId === user.id) throw new HttpError(400, "invalid_target", "You can't swipe on yourself.");
-  const [target] = await db.select({ id: users.id, isDemo: users.isDemo, demoLikesBack: users.demoLikesBack }).from(users).where(eq(users.id, targetId)).limit(1);
-  if (!target) throw notFound("Traveler not found.");
+  const [target] = await db.select({ id: users.id, isDemo: users.isDemo, demoLikesBack: users.demoLikesBack, suspendedAt: users.suspendedAt }).from(users).where(eq(users.id, targetId)).limit(1);
+  if (!target || (target.suspendedAt && action === "like")) throw notFound("Traveler not found.");
 
   await db
     .insert(swipes)
@@ -262,6 +263,7 @@ export const togetherRoutes = [
 
   route.authed("POST", "/chats/:userId/messages", async ({ db, user, params, body }) => {
     const { text } = await body(z.object({ text: z.string().trim().min(1).max(2000) }));
+    assertClean({ text });
     const m = await matchWith(db, user.id, params.userId);
     const now = Date.now();
     await db.insert(messages).values({ id: newId("msg"), matchId: m.id, senderId: user.id, body: text, createdAt: new Date(now) });
@@ -274,6 +276,7 @@ export const togetherRoutes = [
   /** Start a group trip with a match. */
   route.authed("POST", "/groups", async ({ db, user, body }) => {
     const input = await body(z.object({ withUserId: userId, title: z.string().trim().min(1).max(80).optional() }));
+    assertClean({ title: input.title });
     await matchWith(db, user.id, input.withUserId);
     const [t] = await travelers(db, user.id, { ids: [input.withUserId] });
     const id = newId("grp");
@@ -293,6 +296,7 @@ export const togetherRoutes = [
 
   route.authed("POST", "/groups/:id/plan", async ({ db, user, params, body }) => {
     const { title } = await body(z.object({ title: z.string().trim().min(1).max(160) }));
+    assertClean({ title });
     await assertMember(db, params.id, user.id);
     const [{ n }] = await db.select({ n: sql<number>`count(*)::int` }).from(planItems).where(eq(planItems.groupId, params.id));
     const itemId = newId("pln");
@@ -314,6 +318,7 @@ export const togetherRoutes = [
 
   route.authed("POST", "/groups/:id/expenses", async ({ db, user, params, body }) => {
     const input = await body(z.object({ title: z.string().trim().min(1).max(120), amount: money, paidBy: memberRef, splitWith: z.array(memberRef).min(1).max(50) }));
+    assertClean({ title: input.title });
     await assertMember(db, params.id, user.id);
     const members = new Set((await db.select({ id: groupMembers.userId }).from(groupMembers).where(eq(groupMembers.groupId, params.id))).map((r) => r.id));
     const resolve = (ref: string) => (ref === "me" ? user.id : ref);

@@ -1,9 +1,10 @@
 "use client";
 
-import { Cloud, LogOut, Trash2 } from "lucide-react";
+import { ChevronRight, Cloud, LogOut, ShieldAlert, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
-import { ApiError } from "@/lib/api";
+import { type FormEvent, useEffect, useState } from "react";
+import { api, ApiError } from "@/lib/api";
 import { session, useSession } from "@/lib/session";
 import { cn } from "@/lib/utils";
 import { SerifAccent } from "./primitives";
@@ -17,6 +18,14 @@ export function AccountScreen() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [moderator, setModerator] = useState(false);
+
+  useEffect(() => {
+    if (status !== "signed-in") return;
+    api<{ moderator: boolean }>("/admin/me")
+      .then((r) => setModerator(r.moderator))
+      .catch(() => setModerator(false));
+  }, [status]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -45,6 +54,13 @@ export function AccountScreen() {
           <p className="mt-1 text-[13.5px] text-white/55">{user.email}</p>
           <p className="mt-3 text-[13.5px] text-white/65">Your bookings, visa applications, matches, chats and group trips are saved to your account.</p>
         </section>
+        {moderator && (
+          <Link href="/admin/reports" className="glass mt-3 flex items-center gap-3 rounded-[22px] px-4 py-3.5 transition-transform active:scale-[0.98]">
+            <ShieldAlert className="size-4 text-[#E9A58A]" />
+            <span className="flex-1 text-[15px] text-white">Review reports</span>
+            <ChevronRight className="size-4 text-white/35" />
+          </Link>
+        )}
         <SecondaryButton
           className="mt-5 w-full"
           onClick={async () => {

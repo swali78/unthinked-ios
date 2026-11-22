@@ -14,7 +14,7 @@ The native wrapping is ready, but **as the app stands today, Apple is likely to 
 
 1. **Simulated bookings.** App Review rejects apps that look like demos or have features that don't really work (Apple guideline 2.1 "App Completeness" and 2.3 "Accurate Metadata"). A travel app where "Book" and "Pay" are fake is the textbook case. Roadmap steps 2 to 4 (backend, real flight, hotel and visa partners, payments) fix this. The alternative is to launch v1 as a **trip planner and visa checker** that hides the Book and Pay buttons, with no fake checkouts.
 2. **"It's just a website."** Apple guideline 4.2 rejects apps that are only a website in a frame. The app looks and feels native, which helps. Real native features help more: push notifications for trip updates, Face ID for the wallet, offline tickets. Plan at least one for v1.
-3. **Travel together connects real people** now that the backend is in. Apple guideline 1.2 needs: a way to report and block (✅ in the app), a way for reports to **reach you and be acted on within 24 hours** (☐ reports only block for now), a filter for objectionable content (☐), and published contact info (✅ support page). Expect a 17+ age rating.
+3. **Travel together connects real people** now that the backend is in. Apple guideline 1.2 needs: a way to report and block, reports that **reach you and get acted on within 24 hours** (review queue at `/admin/reports`, optional Slack or Discord ping), a filter for objectionable content, and published contact info. All four are now in the app; you still have to check the queue every day. Expect a 17+ age rating.
 4. **Sign-in:** if you add Google or Facebook login, iOS also needs **Sign in with Apple**.
 5. **Demo account for reviewers.** Sign-in exists, so both stores need working demo credentials in the review notes.
 
@@ -41,7 +41,8 @@ The native wrapping is ready, but **as the app stands today, Apple is likely to 
 - ☐ Set `NEXT_PUBLIC_LEGAL_NAME` and `NEXT_PUBLIC_SUPPORT_EMAIL` on the deployment
 - ☐ Fix the review blockers above (real bookings, or planner-only v1)
 - ☐ At least one native feature (push notifications recommended)
-- ☐ Reports from "Report and block" saved for review, plus an objectionable-content filter on chat and bios
+- ✅ Reports from "Report and block" go to a review queue (`/admin/reports`), plus an offensive-content filter on chats, names, bios and group trips
+- ☐ Set `UNTHINKED_ADMIN_EMAILS` (and optionally `MODERATION_WEBHOOK_URL`) on the deployment
 - ☐ Demo reviewer account on production
 - ☐ Final screenshots with real content and captions
 
