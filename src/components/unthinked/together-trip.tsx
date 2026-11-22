@@ -24,6 +24,7 @@ export function TogetherTrip() {
   const [idea, setIdea] = useState("");
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ title: "", amount: "", paidBy: "me" });
+  const [problem, setProblem] = useState<string | null>(null);
 
   if (!g) {
     return (
@@ -36,13 +37,17 @@ export function TogetherTrip() {
   const owed = balances(g);
 
   const addIdea = () => {
-    if (idea.trim()) together.addPlan(g.id, idea.trim());
-    setIdea("");
+    if (!idea.trim()) return;
+    const problem = together.addPlan(g.id, idea.trim());
+    setProblem(problem);
+    if (!problem) setIdea("");
   };
   const saveExpense = () => {
     const amount = parseFloat(form.amount);
     if (!form.title.trim() || !(amount > 0)) return;
-    together.addExpense(g.id, { title: form.title.trim(), amount, paidBy: form.paidBy, splitWith: g.members });
+    const problem = together.addExpense(g.id, { title: form.title.trim(), amount, paidBy: form.paidBy, splitWith: g.members });
+    setProblem(problem);
+    if (problem) return;
     setForm({ title: "", amount: "", paidBy: "me" });
     setAdding(false);
   };
@@ -64,6 +69,7 @@ export function TogetherTrip() {
               >
                 <h3 className="text-[18px] text-white">Add an <SerifAccent>expense</SerifAccent></h3>
                 <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="What was it? e.g. Dinner in Seminyak" className="glass-thin mt-4 h-12 w-full rounded-2xl px-4 text-[16px] text-white placeholder:text-white/40 focus:outline-none" />
+                {problem && <p role="alert" className="mt-2 px-1 text-[12.5px] text-rose-300">{problem}</p>}
                 <input value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} inputMode="decimal" placeholder="Amount (USD)" className="glass-thin mt-2.5 h-12 w-full rounded-2xl px-4 text-[16px] text-white placeholder:text-white/40 focus:outline-none" />
                 <p className="mt-4 text-[13px] text-white/55">Paid by</p>
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -125,6 +131,7 @@ export function TogetherTrip() {
             <input value={idea} onChange={(e) => setIdea(e.target.value)} placeholder="Suggest something to do" className="glass-thin h-12 flex-1 rounded-full px-5 text-[16px] text-white placeholder:text-white/40 focus:outline-none" />
             <button type="submit" aria-label="Add idea" className="flex size-12 items-center justify-center rounded-full bg-white text-black transition-transform active:scale-[0.96]"><Plus className="size-5" /></button>
           </form>
+          {problem && !adding && <p role="alert" className="mt-2 px-2 text-[12.5px] text-rose-300">{problem}</p>}
           <Link href={`/chat?q=${encodeURIComponent(`Plan 5 days in ${g.destination} for ${g.members.length} people`)}`} className="glass mt-3 flex items-center gap-3 rounded-[20px] p-3.5 transition-transform active:scale-[0.98]">
             <Sparkles className="size-5 text-[#E9C99F]" />
             <span className="text-[14px] text-white/85">Ask Unthinked to draft the plan</span>

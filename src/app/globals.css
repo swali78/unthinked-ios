@@ -4,6 +4,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Desktop preview: the app sits inside an iPhone frame only on a real desktop
+   (wide, tall enough, mouse). Tablets, phones in landscape and touch laptops
+   get the full-screen app instead. Use `frame:` for anything that only
+   applies inside that frame (status bar offsets, home indicator spacing). */
+@custom-variant frame (@media (min-width: 1024px) and (min-height: 600px) and (hover: hover) and (pointer: fine));
+
 /* Motion tokens (emil-design-eng): exposed as CSS variables and as Tailwind's
    ease-out / ease-in-out utilities. Built-in CSS easings are too weak. */
 @theme {
@@ -57,7 +63,7 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+  --radius-frame: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);

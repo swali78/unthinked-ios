@@ -205,7 +205,7 @@ export function HotelDetail() {
       {/* Floating top controls over the photo; a solid bar fades in once the photo scrolls away */}
       <div
         className={cn(
-          "pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between px-4 pb-2 pt-[max(env(safe-area-inset-top),12px)] transition-[background,box-shadow] duration-300 md:pt-[54px]",
+          "pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between px-4 pb-2 pt-[max(env(safe-area-inset-top),12px)] transition-[background,box-shadow] duration-300 frame:pt-[54px]",
           scrolled && "bg-[#0b0b0c]/90 shadow-[0_1px_0_rgb(255_255_255/0.06)] backdrop-blur-xl",
         )}
       >
@@ -237,7 +237,7 @@ export function HotelDetail() {
         </button>
       </div>
 
-      <div className="relative z-10 border-t border-white/[0.06] bg-[#0b0b0c]/85 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 backdrop-blur-xl md:pb-7">
+      <div className="relative z-10 border-t border-white/[0.06] bg-[#0b0b0c]/85 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 backdrop-blur-xl frame:pb-7">
         <div className="flex items-center gap-4">
           <div className="min-w-0 flex-1">
             <p className="truncate text-[12px] text-white/55">

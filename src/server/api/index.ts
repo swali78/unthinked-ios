@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { createRouter, json, route } from "../http";
 import { accountRoutes } from "./accounts";
 import { bookingRoutes } from "./bookings";
+import { reportRoutes } from "./reports";
 import { togetherRoutes } from "./together";
 
 /** Every `/api/v1` endpoint. The full list is in docs/backend.md. */
@@ -13,4 +14,5 @@ export const handleApi = createRouter([
   ...accountRoutes,
   ...togetherRoutes,
   ...bookingRoutes,
+  ...reportRoutes,
 ]);
