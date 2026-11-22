@@ -58,7 +58,7 @@ export function ChatScreen() {
   const voiceStage = speech.listening || (empty && !busy);
 
   return (
-    <div className="relative flex h-full flex-col pt-[max(env(safe-area-inset-top),12px)] md:pt-[54px]">
+    <div className="relative flex h-full flex-col pt-[max(env(safe-area-inset-top),12px)] frame:pt-[54px]">
       {/* Spotlight glow behind the stage */}
       <div
         aria-hidden
@@ -169,7 +169,7 @@ export function ChatScreen() {
         )}
       </AnimatePresence>
 
-      <div className="relative z-10 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-2 md:pb-7">
+      <div className="relative z-10 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-2 frame:pb-7">
         <Composer
           onSubmit={send}
           disabled={busy}

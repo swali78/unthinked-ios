@@ -1,33 +1,45 @@
 import type { ReactNode } from "react";
 
 /**
- * On phones the app fills the viewport. From 768px up it sits inside an
- * iPhone-sized frame with a dynamic island and status bar, so the desktop
- * preview reads the same as the device.
+ * Phones, tablets and touch laptops get the app full screen. On tablets and
+ * other wide screens the app is a centred column (max 640px) so lines and
+ * cards keep phone proportions instead of stretching edge to edge.
+ *
+ * On a desktop with a mouse (the `frame:` variant) it sits inside an
+ * iPhone-sized frame with a dynamic island and status bar, so the preview
+ * reads the same as the device. On short windows the whole device is zoomed
+ * down to fit (layout stays at true iPhone size) instead of overflowing.
  */
+
+// Runs before first paint and on resize; sets the zoom used by `frame:`.
+const FIT_FRAME = `(function(){var r=document.documentElement;function f(){r.style.setProperty("--frame-scale",String(Math.min(1,(innerHeight-48)/852)))}f();addEventListener("resize",f)})()`;
+
 export function PhoneFrame({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-[#050506] md:py-10">
+    <div className="flex min-h-dvh items-center justify-center bg-[#050506] frame:py-6">
+      <script dangerouslySetInnerHTML={{ __html: FIT_FRAME }} />
       {/* Ambient light behind the device on desktop */}
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 hidden md:block"
+        className="pointer-events-none fixed inset-0 hidden frame:block"
         style={{
           background:
             "radial-gradient(50% 40% at 50% 30%, rgb(255 255 255 / 0.06), transparent 70%)",
         }}
       />
-      <div className="relative h-dvh w-full md:h-[852px] md:w-[393px] md:rounded-[60px] md:bg-[#1a1a1c] md:p-[11px] md:shadow-[0_0_0_1px_rgb(255_255_255/0.08),0_0_0_2px_#000,0_50px_120px_-20px_rgb(0_0_0/0.9),inset_0_0_2px_rgb(255_255_255/0.25)]">
+      <div className="relative h-dvh w-full frame:h-[852px] frame:w-[393px] frame:[zoom:var(--frame-scale,1)] frame:rounded-[60px] frame:bg-[#1a1a1c] frame:p-[11px] frame:shadow-[0_0_0_1px_rgb(255_255_255/0.08),0_0_0_2px_#000,0_50px_120px_-20px_rgb(0_0_0/0.9),inset_0_0_2px_rgb(255_255_255/0.25)]">
         <div
           id="screen"
-          className="stage relative isolate h-full w-full overflow-hidden md:rounded-[49px]"
+          className="stage relative isolate h-full w-full overflow-hidden frame:rounded-[49px]"
         >
           <StatusBar />
-          {children}
+          <div className="relative mx-auto h-full w-full max-w-[640px] min-[672px]:border-x min-[672px]:border-white/[0.05] frame:max-w-none frame:border-0">
+            {children}
+          </div>
           {/* Home indicator */}
           <div
             aria-hidden
-            className="pointer-events-none absolute bottom-2 left-1/2 z-50 hidden h-[5px] w-[134px] -translate-x-1/2 rounded-full bg-white/80 md:block"
+            className="pointer-events-none absolute bottom-2 left-1/2 z-50 hidden h-[5px] w-[134px] -translate-x-1/2 rounded-full bg-white/80 frame:block"
           />
         </div>
       </div>
@@ -39,7 +51,7 @@ function StatusBar() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-0 z-50 hidden h-[54px] items-center justify-between px-8 pt-1 text-[15px] font-semibold text-white md:flex"
+      className="pointer-events-none absolute inset-x-0 top-0 z-50 hidden h-[54px] items-center justify-between px-8 pt-1 text-[15px] font-semibold text-white frame:flex"
     >
       <span className="w-14 text-center tabular-nums">9:41</span>
       <span className="absolute left-1/2 top-[11px] h-[34px] w-[122px] -translate-x-1/2 rounded-full bg-black" />
