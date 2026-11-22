@@ -8,6 +8,7 @@ import { DEFAULT_PREFS, type Prefs, useBooking } from "@/lib/booking-store";
 import { SAVED_TRAVELER } from "@/lib/data/booking";
 import { AIRPORTS, TRAVELER } from "@/lib/data/seed";
 import { useSession } from "@/lib/session";
+import { findOffensive, OFFENSIVE_MESSAGE } from "@/lib/moderation";
 import { cn } from "@/lib/utils";
 import { Chip, SerifAccent, Skeleton, Switch } from "./primitives";
 import { SectionLabel } from "./screen";
@@ -65,9 +66,11 @@ export function ProfileScreen() {
             value={prefs.name}
             maxLength={24}
             onChange={(e) => setPref({ name: e.target.value })}
-            onBlur={(e) => !e.target.value.trim() && setPref({ name: DEFAULT_PREFS.name })}
+            onBlur={(e) => (!e.target.value.trim() || findOffensive(e.target.value)) && setPref({ name: DEFAULT_PREFS.name })}
+            aria-invalid={Boolean(findOffensive(prefs.name))}
             className="block w-full bg-transparent text-[20px] font-medium text-white focus:outline-none"
           />
+          {findOffensive(prefs.name) && <p role="alert" className="text-[12px] text-rose-300">{OFFENSIVE_MESSAGE}</p>}
           <p className="text-[12.5px] text-white/50">
             {SAVED_TRAVELER.nationality} passport · Home {prefs.homeAirport}
           </p>

@@ -91,7 +91,7 @@ export function WelcomeScreen() {
         )}
       />
 
-      <div className="relative flex h-full flex-col px-6 pb-[max(env(safe-area-inset-bottom),20px)] pt-[max(env(safe-area-inset-top),20px)] md:pb-10 md:pt-[62px]">
+      <div className="relative flex h-full flex-col px-6 pb-[max(env(safe-area-inset-bottom),20px)] pt-[max(env(safe-area-inset-top),20px)] frame:pb-10 frame:pt-[62px]">
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-2 text-[17px] font-medium text-white">
             <AIOrb size={30} /> Unthinked

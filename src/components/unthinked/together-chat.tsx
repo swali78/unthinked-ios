@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUp, BadgeCheck, ChevronRight, Users } from "lucide-react";
+import { ArrowUp, BadgeCheck, ChevronRight, Flag, Users } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -9,6 +9,7 @@ import { together, travelerById, useTogether } from "@/lib/together";
 import { SerifAccent, STAGGER } from "./primitives";
 import { Screen } from "./screen";
 import { Avatar } from "./together-discover";
+import { ReportSheet } from "./together-report";
 
 /** Matches and conversations. */
 export function TogetherChats() {
@@ -63,6 +64,8 @@ export function TogetherChat() {
   const s = useTogether();
   const router = useRouter();
   const [text, setText] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [reporting, setReporting] = useState(false);
   const end = useRef<HTMLDivElement>(null);
   const messages = s.chats[id] ?? [];
 
@@ -75,8 +78,9 @@ export function TogetherChat() {
   const send = () => {
     const t = text.trim();
     if (!t) return;
-    together.send(id, t);
-    setText("");
+    const problem = together.send(id, t);
+    setError(problem);
+    if (!problem) setText("");
   };
 
   return (
@@ -89,11 +93,28 @@ export function TogetherChat() {
         </span>
       }
       back="/together/chats"
+      right={
+        <button
+          type="button"
+          aria-label={`Report ${person.name}`}
+          onClick={() => setReporting(true)}
+          className="glass-thin flex size-11 items-center justify-center rounded-full text-[#E9A58A] transition-transform active:scale-[0.96]"
+        >
+          <Flag className="size-4" />
+        </button>
+      }
+      overlay={<ReportSheet person={reporting ? person : null} context="chat" onClose={() => setReporting(false)} onDone={() => router.push("/together/chats")} />}
       footer={
+        <>
+        {error && (
+          <p role="alert" className="mb-2 px-2 text-[12.5px] leading-snug text-rose-300">
+            {error}
+          </p>
+        )}
         <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex items-center gap-2">
           <input
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => { setText(e.target.value); if (error) setError(null); }}
             placeholder={`Message ${person.name}`}
             aria-label={`Message ${person.name}`}
             className="glass-thin h-12 flex-1 rounded-full px-5 text-[16px] text-white placeholder:text-white/40 focus:outline-none"
@@ -102,6 +123,7 @@ export function TogetherChat() {
             <ArrowUp className="size-5" />
           </button>
         </form>
+        </>
       }
     >
       <button
