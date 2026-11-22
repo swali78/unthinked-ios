@@ -7,6 +7,7 @@
  */
 import { useSyncExternalStore } from "react";
 import { api } from "./api";
+import { findOffensive, OFFENSIVE_MESSAGE, type ReportReason } from "./moderation";
 import { onSessionChange } from "./session";
 import { img, TRAVELERS, type MatchPrefs, type Traveler } from "./matching";
 
@@ -194,19 +195,38 @@ export const together = {
     set((s) => ({ ...s, passed: [...new Set([...s.passed, id])] }));
     sync(() => api("/match/swipes", { method: "POST", body: { targetId: id, action: "pass" } }));
   },
+  /**
+   * Report and block. Signed in, the report goes to the moderation queue with
+   * the conversation attached; signed out (demo profiles) it only blocks.
+   */
+  async report(id: string, input: { reason: ReportReason; details?: string; context: "profile" | "chat" | "discover" }) {
+    set((s) => ({ ...s, blocked: [...new Set([...s.blocked, id])], matches: s.matches.filter((m) => m !== id) }));
+    if (!remote) return;
+    try {
+      await api("/reports", { method: "POST", body: { targetId: id, ...input } });
+    } finally {
+      void refresh();
+    }
+  },
   block(id: string) {
     set((s) => ({ ...s, blocked: [...new Set([...s.blocked, id])], matches: s.matches.filter((m) => m !== id) }));
     sync(() => api("/match/swipes", { method: "POST", body: { targetId: id, action: "block" } }));
   },
-  send(id: string, text: string) {
+  /** Returns an error to show instead of sending, or null once sent. */
+  send(id: string, text: string): string | null {
+    if (findOffensive(text)) return OFFENSIVE_MESSAGE;
     set((s) => ({ ...s, chats: { ...s.chats, [id]: [...(s.chats[id] ?? []), { id: uid("m"), from: "me", text, at: Date.now() }] } }));
-    if (remote) return sync(() => api(`/chats/${encodeURIComponent(id)}/messages`, { method: "POST", body: { text } }));
+    if (remote) {
+      sync(() => api(`/chats/${encodeURIComponent(id)}/messages`, { method: "POST", body: { text } }));
+      return null;
+    }
     setTimeout(() => {
       set((s) => ({
         ...s,
         chats: { ...s.chats, [id]: [...(s.chats[id] ?? []), { id: uid("m"), from: id, text: "Love it. Let's start a group trip so we can plan and split costs.", at: Date.now() }] },
       }));
     }, 1300);
+    return null;
   },
   /** Resolves to the new group trip's id. */
   async startTrip(withId: string): Promise<string> {
@@ -225,9 +245,11 @@ export const together = {
     set((s) => ({ ...s, groups: [g, ...s.groups] }));
     return g.id;
   },
-  addPlan(gid: string, title: string) {
+  addPlan(gid: string, title: string): string | null {
+    if (findOffensive(title)) return OFFENSIVE_MESSAGE;
     set((s) => ({ ...s, groups: s.groups.map((g) => (g.id === gid ? { ...g, plan: [...g.plan, { id: uid("p"), day: `Day ${g.plan.length + 1}`, title, votes: 1, votedByMe: true }] } : g)) }));
     sync(() => api(`/groups/${gid}/plan`, { method: "POST", body: { title } }));
+    return null;
   },
   /** One vote per idea: tap to vote, tap again to take it back. */
   vote(gid: string, pid: string) {
@@ -243,9 +265,11 @@ export const together = {
     }));
     sync(() => api(`/groups/${gid}/plan/${pid}/vote`, { method: on ? "POST" : "DELETE" }));
   },
-  addExpense(gid: string, e: Omit<Expense, "id">) {
+  addExpense(gid: string, e: Omit<Expense, "id">): string | null {
+    if (findOffensive(e.title)) return OFFENSIVE_MESSAGE;
     set((s) => ({ ...s, groups: s.groups.map((g) => (g.id === gid ? { ...g, expenses: [...g.expenses, { ...e, id: uid("e") }] } : g)) }));
     sync(() => api(`/groups/${gid}/expenses`, { method: "POST", body: e }));
+    return null;
   },
   settle(gid: string, from: string, to: string, amount: number) {
     set((s) => ({ ...s, groups: s.groups.map((g) => (g.id === gid ? { ...g, settled: [...g.settled, { id: uid("s"), from, to, amount }] } : g)) }));

@@ -5,6 +5,7 @@ import type { Db } from "../db";
 import { profiles, users } from "../db/schema";
 import { seedStarterGroup } from "../demo";
 import { HttpError, json, route } from "../http";
+import { assertClean } from "../moderation";
 import { newId } from "../ids";
 
 const email = z.string().trim().toLowerCase().email().max(254);
@@ -60,6 +61,7 @@ async function signedIn(db: Db, userId: string, status = 200) {
 export const accountRoutes = [
   route.public("POST", "/auth/signup", async ({ db, body }) => {
     const input = await body(SignUp);
+    assertClean({ name: input.name });
     const id = newId("usr");
     const passwordHash = await hashPassword(input.password);
     const inserted = await db.insert(users).values({ id, email: input.email, passwordHash, name: input.name }).onConflictDoNothing().returning({ id: users.id });
@@ -71,9 +73,10 @@ export const accountRoutes = [
 
   route.public("POST", "/auth/login", async ({ db, body }) => {
     const input = await body(SignIn);
-    const [u] = await db.select({ id: users.id, passwordHash: users.passwordHash }).from(users).where(eq(users.email, input.email)).limit(1);
+    const [u] = await db.select({ id: users.id, passwordHash: users.passwordHash, suspendedAt: users.suspendedAt }).from(users).where(eq(users.email, input.email)).limit(1);
     // Same answer whether the email or the password is wrong.
     if (!u || !(await verifyPassword(input.password, u.passwordHash))) throw new HttpError(401, "invalid_credentials", "That email and password don't match.");
+    if (u.suspendedAt) throw new HttpError(403, "account_suspended", "This account has been suspended for breaking our community rules. Contact support if you think this is a mistake.");
     return signedIn(db, u.id);
   }),
 
@@ -87,6 +90,7 @@ export const accountRoutes = [
 
   route.authed("PATCH", "/me", async ({ db, user, body }) => {
     const { name, ...rest } = await body(ProfilePatch);
+    assertClean({ name, fromCity: rest.fromCity, bio: rest.bio, interests: rest.interests?.join(" ") });
     if (name) await db.update(users).set({ name }).where(eq(users.id, user.id));
     if (Object.keys(rest).length) await db.update(profiles).set(rest).where(eq(profiles.userId, user.id));
     return json(await account(db, user.id));

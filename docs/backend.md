@@ -77,8 +77,22 @@ All under `/api/v1`. "Auth" means a session cookie or bearer token is required.
 | GET, POST | `/bookings` | Auth | Your flight and hotel bookings (`Trip` shape, totals in cents). POST is idempotent by booking reference. |
 | POST | `/bookings/:id/cancel` | Auth | Mark a booking cancelled. |
 | GET, POST | `/visa-applications` | Auth | Your visa applications. |
+| POST | `/reports` | Auth | `{ targetId, reason, details?, context? }`. Reports and blocks. Saves the person's profile and their last 20 messages to you as evidence, and pings `MODERATION_WEBHOOK_URL`. |
+| GET | `/admin/me` | Auth | `{ moderator }`: whether you can review reports. |
+| GET | `/admin/reports` | Moderator | The queue. `?status=open` (default), `dismissed`, `suspended` or `all`. |
+| POST | `/admin/reports/:id` | Moderator | `{ action: "dismiss" \| "suspend" \| "reopen" }`. Suspend signs the person out, hides them, blocks sign-in and closes their other open reports. |
+| POST | `/admin/users/:id/unsuspend` | Moderator | Lift a suspension. |
 
 In Travel together responses, the signed-in traveler is always `"me"`, which is how the app already refers to them.
+
+## Safety and moderation
+
+What the App Store (guideline 1.2) and Google Play ask of apps where strangers talk:
+
+- **Offensive-content filter** (`src/lib/moderation.ts`). Chat messages, names, bios, interests, group trip titles, plan ideas and expense titles are checked on the server, which answers `422 offensive_content`. The app runs the same check first, so people see why before anything is sent. It matches whole words with leetspeak and stretched letters undone, in English and romanised Hindi and Urdu, and leaves out words with innocent meanings. Add words to the lists there; `src/lib/moderation.test.ts` lists phrases that must keep passing.
+- **Report and block** from a profile, the Discover safety sheet or a chat. The block is immediate both ways; the report lands in the queue.
+- **Review queue** at `/admin/reports` (also linked from the Account screen) for the emails in `UNTHINKED_ADMIN_EMAILS`. Set `MODERATION_WEBHOOK_URL` to a Slack or Discord webhook so each report pings you; both stores expect action within 24 hours.
+- **Suspension** hides the person from everyone, ends their sessions and stops them signing in. Deleting the account is left to the person.
 
 ## Demo content
 

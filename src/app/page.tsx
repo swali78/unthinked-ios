@@ -21,7 +21,7 @@ export default function Home() {
 
   return (
     <div className="relative h-full">
-    <div className="h-full overflow-y-auto overscroll-contain pb-44 pt-[max(env(safe-area-inset-top),20px)] [scrollbar-width:none] md:pt-[62px]">
+    <div className="h-full overflow-y-auto overscroll-contain pb-44 pt-[max(env(safe-area-inset-top),20px)] [scrollbar-width:none] frame:pt-[62px]">
       {/* Greeting */}
       <header className="flex flex-col items-center px-6 pt-6 text-center">
         <AIOrb size={58} />
