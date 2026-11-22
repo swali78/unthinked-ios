@@ -14,5 +14,7 @@ export function photo(src: string, width: number, height?: number, quality = 85)
   return {
     src: url(2),
     srcSet: `${url(1)} 1x, ${url(2)} 2x, ${url(3)} 3x`,
+    // Decode off the main thread so scrolling past photos stays smooth.
+    decoding: "async" as const,
   };
 }

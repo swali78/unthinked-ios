@@ -121,14 +121,14 @@ export function TabBar() {
   };
 
   return (
-    <nav aria-label="Main" className="relative mx-auto flex w-fit justify-center px-4">
+    <nav aria-label="Main" className="relative mx-auto flex w-fit justify-center px-4 max-[359px]:px-2">
       <div
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={(e) => endScrub(e)}
         onPointerCancel={(e) => endScrub(e, true)}
         onPointerLeave={(e) => e.pointerType === "mouse" && pointerX.set(Number.POSITIVE_INFINITY)}
-        className="glass-thin flex h-[66px] touch-none items-end gap-1.5 rounded-[26px] px-2.5 pb-[7px] select-none"
+        className="glass-thin flex h-[66px] touch-none items-end gap-1.5 rounded-[26px] px-2.5 pb-[7px] select-none max-[359px]:gap-1 max-[359px]:px-1.5"
       >
         {TABS.map((tab, i) => (
           <DockTab
@@ -188,7 +188,7 @@ function DockTab({
       aria-current={active ? "page" : undefined}
       aria-label={badge ? `${tab.label}, ${badge} upcoming` : tab.label}
       draggable={false}
-      className="group relative flex w-[54px] flex-col items-center gap-1 rounded-[16px] outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+      className="group relative flex w-[54px] flex-col max-[359px]:w-[46px] items-center gap-1 rounded-[16px] outline-none focus-visible:ring-2 focus-visible:ring-white/60"
     >
       <motion.span
         className="relative flex items-center justify-center"
