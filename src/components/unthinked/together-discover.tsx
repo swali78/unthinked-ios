@@ -9,6 +9,7 @@ import { photo } from "@/lib/photo";
 import { type Compatibility, compatibility, fitsPrefs, rangeLabel, type Traveler, type TravelStyle, together, useTogether } from "@/lib/together";
 import { Chip, SerifAccent } from "./primitives";
 import { Screen } from "./screen";
+import { ReportSheet } from "./together-report";
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 
@@ -86,6 +87,7 @@ export function TogetherDiscover() {
   const [style, setStyle] = useState<"All" | TravelStyle>("All");
   const [match, setMatch] = useState<Traveler | null>(null);
   const [safety, setSafety] = useState<Traveler | null>(null);
+  const [reporting, setReporting] = useState<Traveler | null>(null);
 
   // With preferences set, filter by them and put the best matches first.
   const deck = useMemo(() => {
@@ -147,13 +149,14 @@ export function TogetherDiscover() {
                 <li className="flex gap-3"><MessageCircle className="size-5 shrink-0 text-[#4FA3B8]" />Keep chats and payments inside the app.</li>
                 <li className="flex gap-3"><ShieldCheck className="size-5 shrink-0 text-[#4FA3B8]" />Meet in public first and share your plans with someone you trust.</li>
               </ul>
-              <button type="button" onClick={() => { together.block(safety.id); setSafety(null); }} className="mt-5 w-full rounded-full border border-[#C9785A]/60 py-3 text-[15px] text-[#E9A58A] transition-transform active:scale-[0.97]">
+              <button type="button" onClick={() => { setReporting(safety); setSafety(null); }} className="mt-5 w-full rounded-full border border-[#C9785A]/60 py-3 text-[15px] text-[#E9A58A] transition-transform active:scale-[0.97]">
                 Report and block
               </button>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+      <ReportSheet person={reporting} context="discover" onClose={() => setReporting(null)} />
         </>
       }
     >

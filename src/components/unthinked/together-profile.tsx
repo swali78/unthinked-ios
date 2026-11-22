@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { SerifAccent } from "./primitives";
 import { PrimaryButton, Screen, SecondaryButton, SectionLabel } from "./screen";
 import { Avatar, MatchCelebration } from "./together-discover";
+import { ReportSheet } from "./together-report";
 
 const FACTOR_ICON: Record<MatchFactor["key"], typeof MapPin> = {
   place: MapPin,
@@ -27,6 +28,7 @@ export function TogetherProfile() {
   const s = useTogether();
   const router = useRouter();
   const [match, setMatch] = useState<Traveler | null>(null);
+  const [reporting, setReporting] = useState(false);
 
   if (!t) {
     return (
@@ -46,10 +48,6 @@ export function TogetherProfile() {
   };
   const pass = () => {
     together.pass(t.id);
-    router.push("/together");
-  };
-  const block = () => {
-    together.block(t.id);
     router.push("/together");
   };
 
@@ -78,11 +76,14 @@ export function TogetherProfile() {
         )
       }
       overlay={
-        <MatchCelebration
-          match={match}
-          onMessage={(m) => { setMatch(null); router.push(`/together/chat?id=${m.id}`); }}
-          onClose={() => { setMatch(null); router.push("/together"); }}
-        />
+        <>
+          <MatchCelebration
+            match={match}
+            onMessage={(m) => { setMatch(null); router.push(`/together/chat?id=${m.id}`); }}
+            onClose={() => { setMatch(null); router.push("/together"); }}
+          />
+          <ReportSheet person={reporting ? t : null} context="profile" onClose={() => setReporting(false)} onDone={() => router.push("/together")} />
+        </>
       }
     >
       {/* Hero */}
@@ -198,7 +199,7 @@ export function TogetherProfile() {
         <p className="mt-1.5 text-[12.5px] leading-snug text-white/50">
           Keep chats and payments in the app, and meet somewhere public first.
         </p>
-        <button type="button" onClick={block} className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-[#E9A58A]">
+        <button type="button" onClick={() => setReporting(true)} className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-[#E9A58A]">
           <Flag className="size-3.5" /> Report and block {t.name}
         </button>
       </div>

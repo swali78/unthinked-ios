@@ -1,6 +1,6 @@
 import { createHash, randomBytes, scrypt as scryptCb, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
-import { and, eq, gt } from "drizzle-orm";
+import { and, eq, gt, isNull } from "drizzle-orm";
 import type { Db } from "./db";
 import { sessions, users } from "./db/schema";
 
@@ -59,7 +59,7 @@ export async function userFromRequest(db: Db, req: Request): Promise<AuthUser | 
     .select({ id: users.id, email: users.email, name: users.name })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
-    .where(and(eq(sessions.tokenHash, sha256(token)), gt(sessions.expiresAt, new Date())))
+    .where(and(eq(sessions.tokenHash, sha256(token)), gt(sessions.expiresAt, new Date()), isNull(users.suspendedAt)))
     .limit(1);
   return row ?? null;
 }
