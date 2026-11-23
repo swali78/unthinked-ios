@@ -100,14 +100,14 @@ function VisaApplyForm() {
     0: {
       firstName: person.firstName.trim() ? undefined : "Enter your first name.",
       lastName: person.lastName.trim() ? undefined : "Enter your last name.",
-      dob: person.dob && new Date(person.dob) < today ? undefined : "Enter a valid date of birth.",
+      dob: person.dob && new Date(`${person.dob}T00:00:00`) < today ? undefined : "Enter a valid date of birth.",
       email: EMAIL.test(person.email.trim()) ? undefined : "Enter an email for your e-visa.",
     },
     1: {
       number: /^[A-Z0-9]{6,9}$/i.test(passport.number.trim()) ? undefined : "Use 6–9 letters or digits.",
       expiry: !passport.expiry
         ? "Enter the expiry date."
-        : new Date(passport.expiry) < minExpiry
+        : new Date(`${passport.expiry}T00:00:00`) < minExpiry
           ? "Must be valid 6 months after you arrive."
           : undefined,
     },
