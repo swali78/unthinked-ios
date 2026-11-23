@@ -31,3 +31,8 @@ They live in `tests/e2e` and cover:
 
 The test server runs with a fresh in-memory database (`PGLITE_DIR=memory://`), and each test starts with empty device storage, so the demo data is the same every run.
 To debug a failure, run `npx playwright test --ui` or `npx playwright show-trace test-results/<test>/trace.zip`.
+
+Each test starts with empty device storage, so the demo data is the same every run.
+To debug a failure, run `npx playwright test --ui` or `npx playwright show-trace test-results/<test>/trace.zip`.
+
+Once the backend lands, integration tests for the API go here too.

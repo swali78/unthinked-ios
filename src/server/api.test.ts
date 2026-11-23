@@ -73,6 +73,18 @@ describe("accounts", () => {
     expect(r.data.profile).toMatchObject({ age: 30, interests: ["Food"] });
     expect((await call("PATCH", "/me", { token, body: { isAdmin: true } })).status).toBe(400);
   });
+
+  it("deletes the account only with the right password", async () => {
+    const { token, email } = await signUp();
+    expect((await call("DELETE", "/me", { token, body: { password: "wrong password" } })).status).toBe(401);
+    expect((await call("GET", "/me", { token })).status).toBe(200);
+    const r = await call("DELETE", "/me", { token, body: { password: "correct horse" } });
+    expect(r.status).toBe(200);
+    expect((await call("GET", "/me", { token })).status).toBe(401);
+    expect((await call("POST", "/auth/login", { body: { email, password: "correct horse" } })).status).toBe(401);
+    // The email is free to sign up again.
+    expect((await call("POST", "/auth/signup", { body: { email, password: "correct horse", name: "Again" } })).status).toBe(201);
+  });
 });
 
 describe("matchmaking and chat", () => {

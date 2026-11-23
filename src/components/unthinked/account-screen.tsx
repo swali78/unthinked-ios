@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Cloud, LogOut, ShieldAlert } from "lucide-react";
+import { ChevronRight, Cloud, LogOut, ShieldAlert, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
@@ -70,6 +70,7 @@ export function AccountScreen() {
         >
           <LogOut className="size-4" /> Sign out
         </SecondaryButton>
+        <DeleteAccount onDeleted={() => router.push("/profile")} />
       </Screen>
     );
   }
@@ -114,6 +115,56 @@ export function AccountScreen() {
         {mode === "signup" ? "Already have an account? Sign in" : "New here? Create an account"}
       </button>
     </Screen>
+  );
+}
+
+/** Two-step delete: reveal, then confirm with the password. */
+function DeleteAccount({ onDeleted }: { onDeleted: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string>();
+  const [busy, setBusy] = useState(false);
+
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="mt-6 flex w-full items-center justify-center gap-2 text-[14px] text-rose-300/90">
+        <Trash2 className="size-4" /> Delete account
+      </button>
+    );
+  }
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError(undefined);
+    try {
+      await session.deleteAccount(password);
+      onDeleted();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Couldn't reach the server. Check your connection and try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <form onSubmit={submit} className="glass mt-6 space-y-3 rounded-[24px] p-4" noValidate>
+      <p className="text-[15px] font-medium text-white">Delete your account?</p>
+      <p className="text-[13px] leading-snug text-white/60">
+        This permanently erases your profile, matches, chats, group trips, bookings and visa applications. It can&apos;t be undone.
+      </p>
+      <Field id="d-password" label="Enter your password to confirm" type="password" value={password} onChange={setPassword} error={error} autoComplete="current-password" />
+      <div className="flex gap-2">
+        <SecondaryButton type="button" className="flex-1" onClick={() => setOpen(false)}>
+          Cancel
+        </SecondaryButton>
+        <button
+          type="submit"
+          disabled={busy || !password}
+          className="flex-1 rounded-full bg-rose-500/90 px-4 py-3 text-[15px] font-medium text-white transition-opacity disabled:opacity-50"
+        >
+          {busy ? "Deleting…" : "Delete forever"}
+        </button>
+      </div>
+    </form>
   );
 }
 
