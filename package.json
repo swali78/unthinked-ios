@@ -10,11 +10,22 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "native:icons": "node scripts/make-app-assets.mjs",
+    "native:assets": "capacitor-assets generate --ios --android --iconBackgroundColor '#0b0b0c' --iconBackgroundColorDark '#0b0b0c' --splashBackgroundColor '#0b0b0c' --splashBackgroundColorDark '#0b0b0c'",
+    "native:sync": "cap sync",
+    "ios": "cap open ios",
+    "android": "cap open android"
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.177",
     "@base-ui/react": "^1.9.0",
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/ios": "^8.6.2",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4",
     "@electric-sql/pglite": "^0.5.17",
     "ai": "^7.0.173",
     "class-variance-authority": "^0.7.1",
@@ -30,6 +41,8 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.2",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -38,6 +51,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "shadcn": "^4.23.0",
+    "sharp": "^0.35.5",
     "tailwindcss": "4.3.3",
     "typescript": "^5",
     "vitest": "^3.2.7"

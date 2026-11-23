@@ -3,6 +3,7 @@ import { Inter, Instrument_Serif } from "next/font/google";
 import { PhoneFrame } from "@/components/unthinked/phone-frame";
 import { BookingProvider } from "@/lib/booking-store";
 import { MotionProvider } from "@/components/unthinked/motion-provider";
+import { NativeBridge } from "@/components/unthinked/native-bridge";
 import "./globals.css";
 
 const inter = Inter({
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <BookingProvider>
           <MotionProvider>
             <PhoneFrame>{children}</PhoneFrame>
+            <NativeBridge />
           </MotionProvider>
         </BookingProvider>
       </body>

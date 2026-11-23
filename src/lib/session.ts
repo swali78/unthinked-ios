@@ -69,4 +69,9 @@ export const session = {
     await api("/auth/logout", { method: "POST" }).catch(() => {});
     setUser(null);
   },
+  /** Permanently erases the account and everything saved to it. */
+  async deleteAccount(password: string) {
+    await api("/me", { method: "DELETE", body: { password } });
+    setUser(null);
+  },
 };
