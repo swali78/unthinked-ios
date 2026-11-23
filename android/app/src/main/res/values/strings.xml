@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Unthinked</string>
+    <string name="title_activity_main">Unthinked</string>
+    <string name="package_name">app.unthinked.travel</string>
+    <string name="custom_url_scheme">app.unthinked.travel</string>
+</resources>
