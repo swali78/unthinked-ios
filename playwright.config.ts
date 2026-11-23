@@ -28,6 +28,7 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
     // The offline assistant answers from mock data, so chat tests never call a real model.
-    env: { UNTHINKED_MOCK_AI: "1" },
+    // A fresh in-memory database each run, so integration tests start from the same demo data.
+    env: { UNTHINKED_MOCK_AI: "1", PGLITE_DIR: "memory://" },
   },
 });

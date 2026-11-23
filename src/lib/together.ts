@@ -14,7 +14,14 @@ import { img, TRAVELERS, type MatchPrefs, type Traveler } from "./matching";
 export * from "./matching";
 
 export type Expense = { id: string; title: string; amount: number; paidBy: string; splitWith: string[] };
-export type PlanItem = { id: string; day: string; title: string; votes: number };
+export type PlanItem = {
+  id: string;
+  day: string;
+  title: string;
+  votes: number;
+  /** Whether you've voted for it. Each traveler gets one vote per idea. */
+  votedByMe?: boolean;
+};
 export type Settlement = { id: string; from: string; to: string; amount: number };
 export type GroupTrip = {
   id: string;
@@ -50,9 +57,9 @@ const SEED_GROUP: GroupTrip = {
   image: img("photo-1559628233-100c798642d4"),
   members: ["me", "t1", "t2"],
   plan: [
-    { id: "p1", day: "Day 1", title: "Land at DPS, check in to the Ubud villa", votes: 3 },
-    { id: "p2", day: "Day 2", title: "Sunrise trek on Mount Batur", votes: 2 },
-    { id: "p3", day: "Day 3", title: "Uluwatu temple and beach clubs", votes: 3 },
+    { id: "p1", day: "Day 1", title: "Land at DPS, check in to the Ubud villa", votes: 3, votedByMe: true },
+    { id: "p2", day: "Day 2", title: "Sunrise trek on Mount Batur", votes: 2, votedByMe: false },
+    { id: "p3", day: "Day 3", title: "Uluwatu temple and beach clubs", votes: 3, votedByMe: true },
   ],
   expenses: [
     { id: "e1", title: "Villa, 6 nights", amount: 900, paidBy: "me", splitWith: ["me", "t1", "t2"] },
@@ -115,7 +122,8 @@ function set(fn: (s: TogetherState) => TogetherState) {
 async function refresh() {
   try {
     const next = await api<TogetherState>("/together");
-    if (remote) {
+    // Skip a reload that raced newer taps; the last request in the queue reloads again.
+    if (remote && pending === 0) {
       state = next;
       emit();
     }
@@ -124,12 +132,25 @@ async function refresh() {
   }
 }
 
+/*
+ * API calls run one at a time, in the order you tapped, so quick taps (vote,
+ * unvote, vote) reach the server in that order. The state reloads once the
+ * queue is empty, so a reload can't undo a tap that's still on its way.
+ */
+let queue: Promise<unknown> = Promise.resolve();
+let pending = 0;
+
 /** Run an API call after an optimistic update, then resync either way. */
 function sync(call: () => Promise<unknown>) {
   if (!remote) return;
-  call()
+  pending++;
+  queue = queue
+    .then(call)
     .catch((err) => console.warn("[together] request failed", err))
-    .finally(refresh);
+    .finally(() => {
+      pending--;
+      if (pending === 0) void refresh();
+    });
 }
 
 const subscribe = (l: () => void) => {
@@ -226,13 +247,23 @@ export const together = {
   },
   addPlan(gid: string, title: string): string | null {
     if (findOffensive(title)) return OFFENSIVE_MESSAGE;
-    set((s) => ({ ...s, groups: s.groups.map((g) => (g.id === gid ? { ...g, plan: [...g.plan, { id: uid("p"), day: `Day ${g.plan.length + 1}`, title, votes: 1 }] } : g)) }));
+    set((s) => ({ ...s, groups: s.groups.map((g) => (g.id === gid ? { ...g, plan: [...g.plan, { id: uid("p"), day: `Day ${g.plan.length + 1}`, title, votes: 1, votedByMe: true }] } : g)) }));
     sync(() => api(`/groups/${gid}/plan`, { method: "POST", body: { title } }));
     return null;
   },
+  /** One vote per idea: tap to vote, tap again to take it back. */
   vote(gid: string, pid: string) {
-    set((s) => ({ ...s, groups: s.groups.map((g) => (g.id === gid ? { ...g, plan: g.plan.map((p) => (p.id === pid ? { ...p, votes: p.votes + 1 } : p)) } : g)) }));
-    sync(() => api(`/groups/${gid}/plan/${pid}/vote`, { method: "POST" }));
+    load();
+    const item = state.groups.find((g) => g.id === gid)?.plan.find((p) => p.id === pid);
+    if (!item) return;
+    const on = !item.votedByMe;
+    set((s) => ({
+      ...s,
+      groups: s.groups.map((g) =>
+        g.id === gid ? { ...g, plan: g.plan.map((p) => (p.id === pid ? { ...p, votedByMe: on, votes: Math.max(0, p.votes + (on ? 1 : -1)) } : p)) } : g,
+      ),
+    }));
+    sync(() => api(`/groups/${gid}/plan/${pid}/vote`, { method: on ? "POST" : "DELETE" }));
   },
   addExpense(gid: string, e: Omit<Expense, "id">): string | null {
     if (findOffensive(e.title)) return OFFENSIVE_MESSAGE;

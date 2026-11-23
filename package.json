@@ -46,8 +46,6 @@
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",
-    "@capacitor/assets": "^4.0.0",
-    "@capacitor/cli": "^8.6.2",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^20",
     "@types/react": "^19",

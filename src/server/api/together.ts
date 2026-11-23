@@ -126,7 +126,7 @@ async function groupViews(db: Db, me: string, groupIds?: string[]) {
   const ids = groupIds ?? (await db.select({ id: groupMembers.groupId }).from(groupMembers).where(eq(groupMembers.userId, me))).map((r) => r.id);
   if (!ids.length) return [];
   const asMe = (id: string) => (id === me ? "me" : id);
-  const [trips, members, plan, votes, exps, splits, settled] = await Promise.all([
+  const [trips, members, plan, votes, myVotes, exps, splits, settled] = await Promise.all([
     db.select().from(groupTrips).where(inArray(groupTrips.id, ids)).orderBy(sql`${groupTrips.createdAt} desc`),
     db.select().from(groupMembers).where(inArray(groupMembers.groupId, ids)).orderBy(asc(groupMembers.joinedAt)),
     db.select().from(planItems).where(inArray(planItems.groupId, ids)).orderBy(asc(planItems.createdAt)),
@@ -136,11 +136,17 @@ async function groupViews(db: Db, me: string, groupIds?: string[]) {
       .innerJoin(planItems, eq(planItems.id, planVotes.itemId))
       .where(inArray(planItems.groupId, ids))
       .groupBy(planVotes.itemId),
+    db
+      .select({ itemId: planVotes.itemId })
+      .from(planVotes)
+      .innerJoin(planItems, eq(planItems.id, planVotes.itemId))
+      .where(and(inArray(planItems.groupId, ids), eq(planVotes.userId, me))),
     db.select().from(expenses).where(inArray(expenses.groupId, ids)).orderBy(asc(expenses.createdAt)),
     db.select({ expenseId: expenseSplits.expenseId, userId: expenseSplits.userId }).from(expenseSplits).innerJoin(expenses, eq(expenses.id, expenseSplits.expenseId)).where(inArray(expenses.groupId, ids)),
     db.select().from(settlements).where(inArray(settlements.groupId, ids)).orderBy(asc(settlements.createdAt)),
   ]);
   const voteCount = new Map(votes.map((v) => [v.itemId, Number(v.n)]));
+  const mine = new Set(myVotes.map((v) => v.itemId));
   return trips.map((g) => {
     const mem = members.filter((m) => m.groupId === g.id).map((m) => asMe(m.userId));
     // "me" first, as the app expects.
@@ -152,7 +158,7 @@ async function groupViews(db: Db, me: string, groupIds?: string[]) {
       dates: g.dates,
       image: g.image,
       members: mem,
-      plan: plan.filter((p) => p.groupId === g.id).map((p) => ({ id: p.id, day: p.day, title: p.title, votes: voteCount.get(p.id) ?? 0 })),
+      plan: plan.filter((p) => p.groupId === g.id).map((p) => ({ id: p.id, day: p.day, title: p.title, votes: voteCount.get(p.id) ?? 0, votedByMe: mine.has(p.id) })),
       expenses: exps
         .filter((e) => e.groupId === g.id)
         .map((e) => ({ id: e.id, title: e.title, amount: dollars(e.amountCents), paidBy: asMe(e.paidBy), splitWith: splits.filter((s) => s.expenseId === e.id).map((s) => asMe(s.userId)) })),
@@ -312,6 +318,16 @@ export const togetherRoutes = [
     const [item] = await db.select().from(planItems).where(and(eq(planItems.id, params.itemId), eq(planItems.groupId, params.id))).limit(1);
     if (!item) throw notFound("Plan item not found.");
     await db.insert(planVotes).values({ itemId: item.id, userId: user.id }).onConflictDoNothing();
+    const [group] = await groupViews(db, user.id, [params.id]);
+    return json({ group });
+  }),
+
+  /** Take your vote back. Removing a vote you never cast is a no-op. */
+  route.authed("DELETE", "/groups/:id/plan/:itemId/vote", async ({ db, user, params }) => {
+    await assertMember(db, params.id, user.id);
+    const [item] = await db.select().from(planItems).where(and(eq(planItems.id, params.itemId), eq(planItems.groupId, params.id))).limit(1);
+    if (!item) throw notFound("Plan item not found.");
+    await db.delete(planVotes).where(and(eq(planVotes.itemId, item.id), eq(planVotes.userId, user.id)));
     const [group] = await groupViews(db, user.id, [params.id]);
     return json({ group });
   }),

@@ -39,8 +39,20 @@ test("start a group trip, plan it and split costs", async ({ page }) => {
   await page.getByPlaceholder("Suggest something to do").fill("Snorkel at Nusa Penida");
   await page.getByRole("button", { name: "Add idea" }).click();
   await expect(page.getByText("Snorkel at Nusa Penida")).toBeVisible();
-  await page.getByRole("button", { name: "Vote for Snorkel at Nusa Penida" }).click();
-  await expect(page.getByRole("button", { name: "Vote for Snorkel at Nusa Penida" })).toHaveText(/2/);
+  // Your own idea starts with your vote. One vote per person: tapping again takes it back.
+  const snorkel = page.getByRole("button", { name: /^Vote for Snorkel at Nusa Penida/ });
+  await expect(snorkel).toHaveAttribute("aria-pressed", "true");
+  await expect(snorkel).toHaveText("1");
+  await snorkel.click();
+  await expect(snorkel).toHaveAttribute("aria-pressed", "false");
+  await expect(snorkel).toHaveText("0");
+  // Someone else's idea: repeated taps never add more than your one vote.
+  const trek = page.getByRole("button", { name: /^Vote for Sunrise trek/ });
+  await expect(trek).toHaveText("2");
+  for (let i = 0; i < 3; i++) await trek.click();
+  await expect(trek).toHaveText("3");
+  await trek.click();
+  await expect(trek).toHaveText("2");
 
   await page.getByRole("button", { name: "Split costs" }).click();
   // Seed: you paid $900 villa, Aisha paid $45 transfer, split three ways.

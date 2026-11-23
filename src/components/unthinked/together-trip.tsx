@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { photo } from "@/lib/photo";
 import { balances, nameOf, together, travelerById, useTogether } from "@/lib/together";
+import { cn } from "@/lib/utils";
 import { Chip, SerifAccent } from "./primitives";
 import { Screen } from "./screen";
 import { Avatar, ME_AVATAR } from "./together-discover";
@@ -121,8 +122,17 @@ export function TogetherTrip() {
               <li key={p.id} className="glass flex items-center gap-3 rounded-[20px] p-3.5">
                 <span className="w-12 text-[12px] font-medium text-[#E9C99F]">{p.day}</span>
                 <span className="flex-1 text-[14.5px] text-white/90">{p.title}</span>
-                <button type="button" onClick={() => together.vote(g.id, p.id)} aria-label={`Vote for ${p.title}`} className="glass-thin flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] text-white transition-transform active:scale-[0.96]">
-                  <ThumbsUp className="size-3.5" /> {p.votes}
+                <button
+                  type="button"
+                  onClick={() => together.vote(g.id, p.id)}
+                  aria-pressed={!!p.votedByMe}
+                  aria-label={`Vote for ${p.title}, ${p.votes} vote${p.votes === 1 ? "" : "s"}`}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] transition-transform active:scale-[0.96]",
+                    p.votedByMe ? "bg-white text-black" : "glass-thin text-white",
+                  )}
+                >
+                  <ThumbsUp className={cn("size-3.5", p.votedByMe && "fill-current")} /> {p.votes}
                 </button>
               </li>
             ))}
